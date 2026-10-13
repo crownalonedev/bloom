@@ -60,7 +60,7 @@ jobs:
             8
             25
             21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Run NetworkDatabaseIT
         env:
           BLOOM_TEST_MYSQL_PORT: "33061"

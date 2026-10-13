@@ -47,7 +47,7 @@ jobs:
             8
             25
             21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Build, test and package
         env:
