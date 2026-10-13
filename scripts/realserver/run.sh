@@ -29,6 +29,8 @@ fi
 
 PYTHON="$(command -v python3 || command -v python || true)"
 [ -n "$PYTHON" ] || { echo "python is required to parse the PaperMC API response" >&2; exit 1; }
+# Windows Python prints CRLF; strip the CR so values compare correctly under Git Bash.
+py() { "$PYTHON" "$@" | tr -d '\r'; }
 
 # ---- Java selection -------------------------------------------------------------------------------------------
 major="${VERSION%%.*}"
@@ -62,7 +64,7 @@ echo "Using Java $JAVA_FEATURE: $JAVA"
 mkdir -p "$CACHE"
 API="https://fill.papermc.io/v3/projects/paper/versions/$VERSION/builds/$BUILD"
 META="$(curl -fsSL -H "User-Agent: bloom-realserver-harness (github.com/crownalonedev/bloom)" "$API")"
-read -r JAR_NAME JAR_URL JAR_SHA < <(echo "$META" | "$PYTHON" -c '
+read -r JAR_NAME JAR_URL JAR_SHA < <(echo "$META" | py -c '
 import json, sys
 d = json.load(sys.stdin)["downloads"]["server:default"]
 print(d["name"], d["url"], d["checksums"]["sha256"])')
@@ -72,7 +74,7 @@ if [ ! -f "$JAR" ]; then
   curl -fsSL -o "$JAR.part" "$JAR_URL"
   mv "$JAR.part" "$JAR"
 fi
-ACTUAL_SHA="$("$PYTHON" -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "$JAR")"
+ACTUAL_SHA="$(py -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "$JAR")"
 if [ "$ACTUAL_SHA" != "$JAR_SHA" ]; then
   echo "SHA-256 mismatch for $JAR_NAME (expected $JAR_SHA, got $ACTUAL_SHA); deleting it" >&2
   rm -f "$JAR"; exit 1
