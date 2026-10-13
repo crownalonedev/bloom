@@ -3,7 +3,7 @@
 _Last updated: 2026-10-12 (session 1)._ Update this file at the end of every work session.
 
 ## Current phase
-Phase 6 — Website (Phases 1–5 implemented; real-server and network-database runs await owner action).
+Phase 6 — Website (Phases 1–5 implemented; real-server runs await owner action).
 
 ## Completed (implemented + tested)
 - **Phase 1 foundation**: Gradle 9.8.1 wrapper, build-logic convention plugins, version catalog, toolchains
@@ -30,7 +30,7 @@ Phase 6 — Website (Phases 1–5 implemented; real-server and network-database 
 - **bloom-storage**: Database (SQLite/MySQL/MariaDB via HikariCP 4.0.3, bounded executor, fail-fast queue,
   transactions, migrations with history table, shutdown that fails never-run work), BlockingDatabase (refuses main
   thread), Repository/SqlRepository, Dialect.upsert. 8 SQLite tests on Java 21 + 8. MySQL/MariaDB tests written
-  (`scripts/test-network-databases.sh`) but **not yet run** (Docker daemon not running).
+  and **verified in CI** against MySQL 8.4 + MariaDB 11 (`.github/workflows/network-databases.yml`, 2026-10-13).
 - **bloom-testing**: ManualScheduler, TestClock. 4 tests on Java 21 + 8.
 - **Examples** (`bloom-examples/*`): basic, menus, items, config, storage, cross-version — shaded + relocated jars.
 - **bloom-selftest** + `scripts/realserver/run.sh`: real-server harness (downloads official Paper builds, verifies
@@ -41,7 +41,6 @@ Phase 6 — Website (Phases 1–5 implemented; real-server and network-database 
 
 ## Partially implemented
 - Legacy adapter: implemented and unit-tested; real-server verification needs the owner to run the harness.
-- Storage: MySQL/MariaDB verification needs Docker running.
 
 ## Remaining (in order)
 1. Website + documentation platform (Phases 6–7).
