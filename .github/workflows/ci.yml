@@ -28,7 +28,7 @@ jobs:
             8
             25
             21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       # build = compile (incl. paper-api 1.21.1 / 26.3 verification), Spotless, Javadoc, unit tests on Java 21 and 8,
       # SQLite tests on the 1.8-era driver, MockBukkit integration tests, example plugin jars.
       - run: ./gradlew build apiManifest --console=plain
@@ -55,7 +55,7 @@ jobs:
             8
             25
             21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: bash scripts/verify-template.sh
 
   website:
