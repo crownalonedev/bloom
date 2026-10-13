@@ -5,6 +5,8 @@ and Bloom uses [semantic versioning](https://semver.org/) from 1.0. Before 1.0, 
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-13
+
 ### Added
 - `bloom-api`, `bloom-common`, `bloom-bukkit`: `Bloom` entry point, platform detection and support policy, capabilities, services, lifecycle, scheduler, messages (chat, action bar, title, boss bar) with an unsupported-feature policy, event subscriptions, cooldowns, durations, caches.
 - Platform adapters: `bloom-legacy` for 1.7.10 – 1.8.9 and `bloom-modern` for Paper 1.21.1 – 26.3.x.
