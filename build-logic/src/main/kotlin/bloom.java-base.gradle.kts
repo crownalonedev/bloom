@@ -60,6 +60,8 @@ tasks.withType<Test>().configureEach {
 }
 
 spotless {
+    // Match .gitattributes (eol=lf); the platform default writes CRLF on Windows.
+    lineEndings = com.diffplug.spotless.LineEnding.UNIX
     java {
         target("src/*/java/**/*.java")
         palantirJavaFormat()
