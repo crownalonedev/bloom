@@ -1,0 +1,74 @@
+# Runs bloom-storage's NetworkDatabaseIT against real MySQL 8.4 and MariaDB 11.
+# CI equivalent of scripts/test-network-databases.sh (no local Docker needed).
+name: Network databases
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bloom-storage/**"
+      - "bloom-api/**"
+      - "bloom-common/**"
+      - "build-logic/**"
+      - "gradle/**"
+      - ".github/workflows/network-databases.yml"
+  pull_request:
+    paths:
+      - "bloom-storage/**"
+      - "bloom-api/**"
+      - "bloom-common/**"
+      - "build-logic/**"
+      - "gradle/**"
+      - ".github/workflows/network-databases.yml"
+  workflow_dispatch:
+
+jobs:
+  network-databases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: bloom
+          MYSQL_USER: bloom
+          MYSQL_PASSWORD: bloom
+        ports:
+          - 33061:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ubloom -pbloom"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: bloom
+          MARIADB_USER: bloom
+          MARIADB_PASSWORD: bloom
+        ports:
+          - 33062:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            25
+            21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Run NetworkDatabaseIT
+        env:
+          BLOOM_TEST_MYSQL_PORT: "33061"
+          BLOOM_TEST_MARIADB_PORT: "33062"
+        run: ./gradlew :bloom-storage:networkDatabaseTest --rerun --console=plain
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: network-database-test-reports
+          path: bloom-storage/build/reports/tests/
