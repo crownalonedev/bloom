@@ -1,9 +1,9 @@
 # Bloom Progress
 
-_Last updated: 2026-10-12 (session 1)._ Update this file at the end of every work session.
+_Last updated: 2026-10-13 (session 2)._ Update this file at the end of every work session.
 
 ## Current phase
-Phase 6 — Website (Phases 1–5 implemented; real-server runs await owner action).
+Phase 6 — Website (Phases 1–5 implemented and verified on real servers).
 
 ## Completed (implemented + tested)
 - **Phase 1 foundation**: Gradle 9.8.1 wrapper, build-logic convention plugins, version catalog, toolchains
@@ -18,7 +18,7 @@ Phase 6 — Website (Phases 1–5 implemented; real-server runs await owner acti
 - **bloom-modern**: Paper adapter (Adventure, MiniMessage, boss bars, PDC, component titles, getHolder(false)).
   Compile-verified against paper-api 1.21.1, 1.21.11 and 26.3 (JDK 25).
 - **bloom-legacy**: 1.7.10–1.8.9 adapter with reflection probes (titles, action bar NMS, NBT, item flags,
-  unbreakable), 1.7.10-safe online players, 32-char title truncation. Unit-tested; **not yet run on a real server**.
+  unbreakable), 1.7.10-safe online players, 32-char title truncation. Verified on real PaperSpigot 1.7.10 and 1.8.8 servers (2026-10-13).
 - **bloom-items**: Items service, ItemBuilder, ItemFlagKey, MaterialMappings (>200 built-in modern↔legacy rows),
   persistent data + custom ids, CustomItem registry, serialization.
 - **bloom-gui**: Menus service, Menu builder (layouts, templates, border/fill, pagination), Button (dynamic,
@@ -40,15 +40,20 @@ Phase 6 — Website (Phases 1–5 implemented; real-server runs await owner acti
   ExamplePluginsIT (7: loads every shipped example jar + the self-test plugin). Fails on any skipped test.
 
 ## Partially implemented
-- Legacy adapter: implemented and unit-tested; real-server verification needs the owner to run the harness.
 
 ## Remaining (in order)
 1. Website + documentation platform (Phases 6–7).
 2. AI integration: AGENTS.md, CLAUDE.md, skill, llms.txt, API manifest (Phase 8).
 3. bloom-doctor (jar checks + linkage verification), CI workflows, release prep (Phases 9–10).
 
+## Real-server verification (2026-10-13, Windows, scripts/realserver/run.bat)
+- PASS on PaperSpigot 1.7.10, PaperSpigot 1.8.8, Paper 1.21.11, Paper 26.3 (all self-test checks).
+- Bugs found and fixed: SQLite on the sqlite-jdbc 3.7.2 driver bundled with 1.7.10/1.8 (journal_mode property,
+  missing Connection.isValid); BloomData NBT dropped on 1.7.10 (asBukkitCopy); harness issues on Windows (CRLF from
+  Python, 1.7.10 EULA flag crash, /dev/null console flood).
+- CI: MySQL 8.4 + MariaDB 11 storage tests run in GitHub Actions (.github/workflows/network-databases.yml).
+
 ## Blockers
-- Real-server tests require accepting the Minecraft EULA on the developer's machine (owner action).
 - No official Bukkit 1.7.10 API artifact exists; 1.7.10 is verified only through real-server runs.
 
 ## Tests performed (all via `./gradlew build`)
@@ -57,6 +62,8 @@ Phase 6 — Website (Phases 1–5 implemented; real-server runs await owner acti
 - bloom-modern compile verification against Paper 1.21.1 and 26.3.
 
 ## Known limitations
+- 1.7.10: CraftItemStack.setItemMeta rebuilds the NBT tag, so changing meta after Bloom stores item data probably
+  drops it (no unhandledTags before 1.8). Unverified; not covered by the self-test.
 - MiniMessage on legacy servers is a documented subset (MiniMessageLite).
 - Title timings are ignored on 1.8 (client defaults); no titles/action bars on 1.7.10.
 - Item data written on legacy (NBT) and modern (PDC) servers is not cross-readable.
