@@ -759,6 +759,11 @@ public final class Database implements Terminable {
             config.setConnectionTimeout(connectionTimeout.toMillis());
             config.setMaxLifetime(maxLifetime.toMillis());
             config.setInitializationFailTimeout(1);
+            if (dialect == Dialect.SQLITE) {
+                // sqlite-jdbc 3.7.2 (bundled with 1.7.10 / 1.8.x) predates JDBC 4 and has no Connection.isValid,
+                // which HikariCP uses when no test query is set.
+                config.setConnectionTestQuery("SELECT 1");
+            }
             String driver = resolveDriver();
             try {
                 config.setDriverClassName(driver);

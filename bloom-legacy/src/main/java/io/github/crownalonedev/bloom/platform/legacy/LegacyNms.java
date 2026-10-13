@@ -31,7 +31,7 @@ final class LegacyNms {
 
     private boolean nbtReady;
     private Method asNmsCopy;
-    private Method asBukkitCopy;
+    private Method asCraftMirror;
     private Method getTag;
     private Method setTag;
     private Constructor<?> newCompound;
@@ -131,7 +131,9 @@ final class LegacyNms {
         Class<?> craftItemStack = craft("inventory.CraftItemStack");
         asNmsCopy = craftItemStack.getMethod("asNMSCopy", ItemStack.class);
         Class<?> nmsItemStack = asNmsCopy.getReturnType();
-        asBukkitCopy = craftItemStack.getMethod("asBukkitCopy", nmsItemStack);
+        // asCraftMirror, not asBukkitCopy: on 1.7.10 asBukkitCopy rebuilds the tag from ItemMeta, which drops
+        // unknown compounds such as BloomData (1.8 added CraftMetaItem.unhandledTags to preserve them).
+        asCraftMirror = craftItemStack.getMethod("asCraftMirror", nmsItemStack);
         Class<?> compound = nms("NBTTagCompound");
         Class<?> base = nms("NBTBase");
         getTag = nmsItemStack.getMethod("getTag");
@@ -184,7 +186,7 @@ final class LegacyNms {
             Object data = getCompound.invoke(tag, BLOOM_COMPOUND);
             setString.invoke(data, key, value);
             set.invoke(tag, BLOOM_COMPOUND, data);
-            return (ItemStack) asBukkitCopy.invoke(null, nmsItem);
+            return (ItemStack) asCraftMirror.invoke(null, nmsItem);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Failed to write item NBT on " + version, e);
         }
@@ -227,7 +229,7 @@ final class LegacyNms {
             } else {
                 set.invoke(tag, BLOOM_COMPOUND, data);
             }
-            return (ItemStack) asBukkitCopy.invoke(null, nmsItem);
+            return (ItemStack) asCraftMirror.invoke(null, nmsItem);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Failed to remove item NBT on " + version, e);
         }

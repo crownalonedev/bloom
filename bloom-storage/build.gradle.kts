@@ -16,6 +16,24 @@ dependencies {
     testRuntimeOnly(libs.mysql.jdbc)
 }
 
+// The SQLite suite again on Java 8 with sqlite-jdbc 3.7.2, the driver 1.7.10 / 1.8.x servers bundle. It predates
+// JDBC 4 (no Connection.isValid) and rejects row-returning pragmas in connection properties.
+val legacySqlite by configurations.creating
+dependencies {
+    legacySqlite(libs.sqlite.jdbc.legacy)
+}
+val testLegacySqlite = tasks.register<Test>("testLegacySqlite") {
+    description = "Runs the SQLite tests on Java 8 with the sqlite-jdbc driver bundled by 1.7.10 / 1.8.x servers."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = legacySqlite + sourceSets["test"].runtimeClasspath.filter { !it.name.startsWith("sqlite-jdbc-") }
+    include("**/DatabaseTest*")
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(8) }
+}
+tasks.named("check") {
+    dependsOn(testLegacySqlite)
+}
+
 // Opt-in tests against real MySQL/MariaDB servers (see scripts/test-network-databases.sh). Excluded from `test`.
 tasks.named<Test>("test") {
     exclude("**/NetworkDatabaseIT*")

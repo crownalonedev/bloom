@@ -83,7 +83,11 @@ fi
 # ---- Server directory ---------------------------------------------------------------------------------------------
 (cd "$ROOT" && ./gradlew :bloom-selftest:shadowJar -q --console=plain)
 PLUGIN="$(ls "$ROOT"/bloom-selftest/build/libs/bloom-selftest-*.jar | grep -v plain | head -1)"
-rm -rf "$WORK"
+if ! rm -rf "$WORK" 2>/dev/null; then
+  echo "Could not clear $WORK: files are in use. A server from an earlier run is probably still running;" >&2
+  echo "stop it (Task Manager > java.exe, or close its terminal) and try again." >&2
+  exit 1
+fi
 mkdir -p "$WORK/plugins"
 cp "$JAR" "$WORK/server.jar"
 cp "$PLUGIN" "$WORK/plugins/"
@@ -106,14 +110,20 @@ PROPS
 echo "Starting $JAR_NAME on port $PORT (timeout ${TIMEOUT}s)"
 cd "$WORK"
 set +e
+# No -Dcom.mojang.eula.agree: on PaperSpigot 1.7.10 that flag makes startup return early and crash with an NPE.
+# eula.txt (written above) covers every version.
+# stdin is a pipe that stays open but sends nothing. With /dev/null, the 1.7.10 console reader gets EOF over and
+# over, queues an empty command each time ("Unknown command" flood) and starves the server thread.
+exec 3< <(sleep "$TIMEOUT")
+STDIN_HOLDER=$!
 if command -v timeout >/dev/null 2>&1; then
-  # No -Dcom.mojang.eula.agree: on PaperSpigot 1.7.10 that flag makes startup return early and crash with an NPE.
-  # eula.txt (written above) covers every version.
-  timeout "$TIMEOUT" "$JAVA" -Xms512M -Xmx1536M -jar server.jar nogui < /dev/null > server.log 2>&1
+  timeout "$TIMEOUT" "$JAVA" -Xms512M -Xmx1536M -jar server.jar nogui <&3 > server.log 2>&1
 else
-  "$JAVA" -Xms512M -Xmx1536M -jar server.jar nogui < /dev/null > server.log 2>&1
+  "$JAVA" -Xms512M -Xmx1536M -jar server.jar nogui <&3 > server.log 2>&1
 fi
 STATUS=$?
+exec 3<&-
+kill "$STDIN_HOLDER" 2>/dev/null
 set -e
 grep -E "BLOOM-SELFTEST|Bloom [0-9]" server.log || true
 RESULTS="$WORK/plugins/BloomSelfTest/results.json"
