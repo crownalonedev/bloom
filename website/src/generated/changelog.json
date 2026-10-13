@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "version": "Unreleased",
+    "date": null,
+    "groups": [
+      {
+        "title": "Added",
+        "items": [
+          "`bloom-api`, `bloom-common`, `bloom-bukkit`: `Bloom` entry point, platform detection and support policy, capabilities, services, lifecycle, scheduler, messages (chat, action bar, title, boss bar) with an unsupported-feature policy, event subscriptions, cooldowns, durations, caches.",
+          "Platform adapters: `bloom-legacy` for 1.7.10 – 1.8.9 and `bloom-modern` for Paper 1.21.1 – 26.3.x.",
+          "`bloom-items`: item builder, modern ↔ legacy material names, item flags, persistent item data, custom items, serialization.",
+          "`bloom-gui`: inventory menus with buttons, layouts, templates, pagination, back navigation, confirmation and per-player state.",
+          "`bloom-config`: YAML configuration with defaults, typed getters with line-numbered errors, validation, object mapping, migrations with backups.",
+          "`bloom-storage`: asynchronous SQLite, MySQL and MariaDB access with pooling, transactions, migrations and repositories.",
+          "`bloom-testing`: manual scheduler and test clock.",
+          "Example plugins, a standalone template project, a real-server self-test harness and the documentation website."
+        ]
+      },
+      {
+        "title": "Fixed",
+        "items": [
+          "SQLite on 1.7.10 and 1.8.x servers, whose bundled sqlite-jdbc 3.7.2 rejected the WAL setting and lacks `Connection.isValid`.",
+          "Persistent item data was lost on 1.7.10 when the item was copied back to a Bukkit stack."
+        ]
+      }
+    ]
+  }
+]

@@ -31,6 +31,9 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.withType<Javadoc>().configureEach {
+    if (name == "apiManifestPart") {
+        return@configureEach // custom doclet (bloom.api-manifest); standard-doclet options do not apply
+    }
     val opts = options as StandardJavadocDocletOptions
     opts.encoding = "UTF-8"
     opts.docEncoding = "UTF-8"

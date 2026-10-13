@@ -1,6 +1,7 @@
 plugins {
     id("bloom.java8-library")
     id("bloom.publishing")
+    id("bloom.api-manifest")
 }
 
 description = "Bloom for Bukkit-family servers: Bloom entry point, platform detection, adapter SPI, scheduler, messaging and events."

@@ -1,6 +1,7 @@
 plugins {
     id("bloom.java8-runtime-tests")
     id("bloom.publishing")
+    id("bloom.api-manifest")
 }
 
 description = "Bloom API: stable, platform-neutral contracts (platform model, capabilities, services, scheduling, text, utilities)."

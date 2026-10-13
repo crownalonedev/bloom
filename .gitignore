@@ -26,3 +26,4 @@ Thumbs.db
 .env
 .env.*
 *.pem
+website/public/api-manifest.json

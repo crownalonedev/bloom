@@ -1,5 +1,5 @@
 {
-  "available": false,
-  "reason": "not fetched",
+  "available": true,
+  "fetchedAt": "2026-10-13T16:10:32.299Z",
   "releases": []
 }

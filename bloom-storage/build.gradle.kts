@@ -1,6 +1,7 @@
 plugins {
     id("bloom.java8-runtime-tests")
     id("bloom.publishing")
+    id("bloom.api-manifest")
 }
 
 description = "Bloom Storage: asynchronous JDBC (SQLite, MySQL, MariaDB) with pooling, transactions, migrations and repositories."

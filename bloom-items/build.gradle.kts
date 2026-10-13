@@ -1,6 +1,7 @@
 plugins {
     id("bloom.java8-library")
     id("bloom.publishing")
+    id("bloom.api-manifest")
 }
 
 description = "Bloom Items: item builder, cross-version materials, persistent item identity and serialization."

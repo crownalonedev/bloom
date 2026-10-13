@@ -1,6 +1,6 @@
 {
   "$comment": "Machine-readable compatibility data used by the website and AI tooling. Keep in sync with docs/architecture/COMPATIBILITY.md and SupportPolicy.java. Status values: tested-real-server, tested-mockbukkit, compile-verified, accepted, unsupported, planned.",
-  "updated": "2026-10-12",
+  "updated": "2026-10-13",
   "bloomVersion": "0.1.0-SNAPSHOT",
   "rows": [
     {
@@ -10,9 +10,10 @@
       "adapter": "legacy",
       "runtime": "accepted",
       "verification": [
+        "tested-real-server PaperSpigot 1.7.10",
         "unit-tests"
       ],
-      "notes": "No titles or action bars (1.7 protocol). Real-server run pending."
+      "notes": "No titles or action bars (1.7 protocol)."
     },
     {
       "minecraft": "1.8 - 1.8.9",
@@ -21,10 +22,11 @@
       "adapter": "legacy",
       "runtime": "accepted",
       "verification": [
+        "tested-real-server PaperSpigot 1.8.8",
         "compile-verified 1.8.8",
         "unit-tests"
       ],
-      "notes": "Titles via Spigot API, action bars via reflection. Real-server run pending."
+      "notes": "Titles via Spigot API, action bars via reflection."
     },
     {
       "minecraft": "1.9 - 1.21.0",
@@ -42,6 +44,7 @@
       "adapter": "modern",
       "runtime": "accepted",
       "verification": [
+        "tested-real-server Paper 1.21.11",
         "compile-verified 1.21.1",
         "compile-verified 1.21.11",
         "tested-mockbukkit 1.21.11"
@@ -55,9 +58,10 @@
       "adapter": "modern",
       "runtime": "accepted",
       "verification": [
+        "tested-real-server Paper 26.3",
         "compile-verified 26.3"
       ],
-      "notes": "Same adapter as 1.21. Real-server run pending."
+      "notes": "Same adapter as 1.21."
     },
     {
       "minecraft": "newer than 26.3.x",

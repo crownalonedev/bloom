@@ -14,16 +14,16 @@ Bloom distinguishes four levels. Never read a higher level into a lower one.
 
 | Minecraft | Server | Java | Adapter | Accepted at runtime | Compile-verified | MockBukkit | Real server |
 |---|---|---|---|---|---|---|---|
-| 1.7.10 | CraftBukkit / Spigot / PaperSpigot | 8 | legacy | yes | only with user-provided API jar | n/a | not yet |
-| 1.8 – 1.8.9 | CraftBukkit / Spigot / PaperSpigot | 8 | legacy | yes | 1.8.8 | n/a | not yet |
+| 1.7.10 | CraftBukkit / Spigot / PaperSpigot | 8 | legacy | yes | only with user-provided API jar | n/a | PaperSpigot 1.7.10 |
+| 1.8 – 1.8.9 | CraftBukkit / Spigot / PaperSpigot | 8 | legacy | yes | 1.8.8 | n/a | PaperSpigot 1.8.8 |
 | 1.9 – 1.21.0 | any | — | none | **no** (Planned) | — | — | — |
-| 1.21.1 – 1.21.11 | Paper (+ forks) | 21 | modern | yes | 1.21.1, 1.21.11 | not yet | not yet |
+| 1.21.1 – 1.21.11 | Paper (+ forks) | 21 | modern | yes | 1.21.1, 1.21.11 | 1.21.11 | Paper 1.21.11 |
 | 1.21.x | Spigot / CraftBukkit | — | none | **no** (needs Paper API) | — | — | — |
-| 26.1 – 26.3.x | Paper (+ forks) | 25 | modern | yes | 26.3 | not yet | not yet |
+| 26.1 – 26.3.x | Paper (+ forks) | 25 | modern | yes | 26.3 | not yet | Paper 26.3 |
 | newer than 26.3.x | Paper | 25+ | modern | only with `allowNewerUntestedVersions(true)` | — | — | — |
 | any | Folia | — | none | **no** (Planned) | — | — | — |
 
-The "not yet" cells are updated by the phase that adds the corresponding test. See `PROGRESS.md`.
+Real-server results: 2026-10-13, all self-test checks passed (`scripts/realserver`). MockBukkit has no 26.x line yet.
 
 ## Capabilities by family
 

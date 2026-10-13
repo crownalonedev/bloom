@@ -1,6 +1,7 @@
 plugins {
     id("bloom.java8-runtime-tests")
     id("bloom.publishing")
+    id("bloom.api-manifest")
 }
 
 description = "Bloom Config: YAML configuration with defaults, validation, object mapping, comment-preserving saves and migrations."

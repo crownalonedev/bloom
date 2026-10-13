@@ -1,6 +1,7 @@
 plugins {
     id("bloom.java8-library")
     id("bloom.publishing")
+    id("bloom.api-manifest")
 }
 
 description = "Bloom GUI: inventory menus with buttons, layouts, pagination, navigation and duplication-safe event handling."

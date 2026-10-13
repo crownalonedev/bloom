@@ -1,6 +1,6 @@
 {
   "$comment": "Machine-readable compatibility data used by the website and AI tooling. Keep in sync with docs/architecture/COMPATIBILITY.md and SupportPolicy.java. Status values: tested-real-server, tested-mockbukkit, compile-verified, accepted, unsupported, planned.",
-  "updated": "2026-10-12",
+  "updated": "2026-10-13",
   "bloomVersion": "0.1.0-SNAPSHOT",
   "rows": [
     {
@@ -9,8 +9,11 @@
       "java": "8",
       "adapter": "legacy",
       "runtime": "accepted",
-      "verification": ["unit-tests"],
-      "notes": "No titles or action bars (1.7 protocol). Real-server run pending."
+      "verification": [
+        "tested-real-server PaperSpigot 1.7.10",
+        "unit-tests"
+      ],
+      "notes": "No titles or action bars (1.7 protocol)."
     },
     {
       "minecraft": "1.8 - 1.8.9",
@@ -18,8 +21,12 @@
       "java": "8",
       "adapter": "legacy",
       "runtime": "accepted",
-      "verification": ["compile-verified 1.8.8", "unit-tests"],
-      "notes": "Titles via Spigot API, action bars via reflection. Real-server run pending."
+      "verification": [
+        "tested-real-server PaperSpigot 1.8.8",
+        "compile-verified 1.8.8",
+        "unit-tests"
+      ],
+      "notes": "Titles via Spigot API, action bars via reflection."
     },
     {
       "minecraft": "1.9 - 1.21.0",
@@ -36,7 +43,12 @@
       "java": "21",
       "adapter": "modern",
       "runtime": "accepted",
-      "verification": ["compile-verified 1.21.1", "compile-verified 1.21.11", "tested-mockbukkit 1.21.11"],
+      "verification": [
+        "tested-real-server Paper 1.21.11",
+        "compile-verified 1.21.1",
+        "compile-verified 1.21.11",
+        "tested-mockbukkit 1.21.11"
+      ],
       "notes": "Spigot/CraftBukkit 1.21 are not supported: the modern adapter needs Paper's Adventure API."
     },
     {
@@ -45,8 +57,11 @@
       "java": "25",
       "adapter": "modern",
       "runtime": "accepted",
-      "verification": ["compile-verified 26.3"],
-      "notes": "Same adapter as 1.21. Real-server run pending."
+      "verification": [
+        "tested-real-server Paper 26.3",
+        "compile-verified 26.3"
+      ],
+      "notes": "Same adapter as 1.21."
     },
     {
       "minecraft": "newer than 26.3.x",
@@ -68,21 +83,116 @@
     }
   ],
   "capabilities": {
-    "columns": ["1.7.10", "1.8.x", "Paper 1.21+ / 26.x"],
+    "columns": [
+      "1.7.10",
+      "1.8.x",
+      "Paper 1.21+ / 26.x"
+    ],
     "rows": [
-      { "capability": "ADVENTURE_TEXT, MINIMESSAGE, HEX_COLORS", "values": ["no", "no", "yes"] },
-      { "capability": "MiniMessage subset (converted)", "values": ["yes", "yes", "full MiniMessage"] },
-      { "capability": "ACTION_BAR", "values": ["no", "probed", "yes"] },
-      { "capability": "TITLES", "values": ["no", "probed", "yes"] },
-      { "capability": "TITLE_TIMINGS", "values": ["no", "no", "yes"] },
-      { "capability": "BOSS_BAR", "values": ["no", "no", "yes"] },
-      { "capability": "COMPONENT_INVENTORY_TITLES", "values": ["no (32 chars)", "no (32 chars)", "yes"] },
-      { "capability": "PERSISTENT_DATA_CONTAINER", "values": ["no", "no", "yes"] },
-      { "capability": "ITEM_NBT_TAGS", "values": ["probed", "probed", "no (uses PDC)"] },
-      { "capability": "ITEM_FLAGS", "values": ["no", "yes", "yes"] },
-      { "capability": "UNBREAKABLE_ITEMS", "values": ["probed", "yes", "yes"] },
-      { "capability": "CUSTOM_MODEL_DATA", "values": ["no", "no", "yes"] },
-      { "capability": "LEGACY_DATA_VALUES", "values": ["yes", "yes", "no"] }
+      {
+        "capability": "ADVENTURE_TEXT, MINIMESSAGE, HEX_COLORS",
+        "values": [
+          "no",
+          "no",
+          "yes"
+        ]
+      },
+      {
+        "capability": "MiniMessage subset (converted)",
+        "values": [
+          "yes",
+          "yes",
+          "full MiniMessage"
+        ]
+      },
+      {
+        "capability": "ACTION_BAR",
+        "values": [
+          "no",
+          "probed",
+          "yes"
+        ]
+      },
+      {
+        "capability": "TITLES",
+        "values": [
+          "no",
+          "probed",
+          "yes"
+        ]
+      },
+      {
+        "capability": "TITLE_TIMINGS",
+        "values": [
+          "no",
+          "no",
+          "yes"
+        ]
+      },
+      {
+        "capability": "BOSS_BAR",
+        "values": [
+          "no",
+          "no",
+          "yes"
+        ]
+      },
+      {
+        "capability": "COMPONENT_INVENTORY_TITLES",
+        "values": [
+          "no (32 chars)",
+          "no (32 chars)",
+          "yes"
+        ]
+      },
+      {
+        "capability": "PERSISTENT_DATA_CONTAINER",
+        "values": [
+          "no",
+          "no",
+          "yes"
+        ]
+      },
+      {
+        "capability": "ITEM_NBT_TAGS",
+        "values": [
+          "probed",
+          "probed",
+          "no (uses PDC)"
+        ]
+      },
+      {
+        "capability": "ITEM_FLAGS",
+        "values": [
+          "no",
+          "yes",
+          "yes"
+        ]
+      },
+      {
+        "capability": "UNBREAKABLE_ITEMS",
+        "values": [
+          "probed",
+          "yes",
+          "yes"
+        ]
+      },
+      {
+        "capability": "CUSTOM_MODEL_DATA",
+        "values": [
+          "no",
+          "no",
+          "yes"
+        ]
+      },
+      {
+        "capability": "LEGACY_DATA_VALUES",
+        "values": [
+          "yes",
+          "yes",
+          "no"
+        ]
+      }
     ]
   }
 }
