@@ -1,0 +1,58 @@
+---
+title: Scheduling
+description: Run code later, repeatedly or off the main thread, with tasks that are cleaned up automatically.
+---
+
+`bloom.scheduler()` returns a `BloomScheduler`. Every task belongs to your plugin and is cancelled by
+`bloom.shutdown()`. If a task throws, the exception is logged with your plugin's name and other tasks keep running.
+
+## Main-thread tasks
+
+Use `sync*` methods for anything that touches players, worlds, entities or inventories.
+
+```java snippet="scheduling.basics"
+```
+
+Delays and periods are in ticks (20 per second) or `Duration`s, which are rounded up to whole ticks. A delay of zero
+means the next tick, as in Bukkit.
+
+## Repeating tasks that stop themselves
+
+Repeating tasks receive their own handle, so they can cancel themselves without a field:
+
+```java snippet="scheduling.countdown"
+```
+
+## Background work
+
+`async*` methods run on background threads. Use them for files, web requests and heavy computation, then come back to
+the main thread before touching the game:
+
+```java snippet="scheduling.async"
+```
+
+<Callout type="warning">
+Never modify worlds, entities or inventories from an async task. Bukkit is not thread-safe, and such bugs show up as
+rare crashes or corrupted chunks, long after the code was written.
+</Callout>
+
+## Thread checks
+
+```java snippet="scheduling.guard"
+```
+
+Bloom's own main-thread APIs (menus, boss bars) perform this check for you.
+
+## Reference
+
+| Method | Runs on | Notes |
+| --- | --- | --- |
+| `sync(Runnable)` | main | next tick |
+| `syncLater(Runnable, ticks or Duration)` | main | |
+| `syncRepeating(Consumer<ScheduledTask>, delay, period)` | main | period at least one tick |
+| `async(Runnable)` / `asyncLater` / `asyncRepeating` | background | |
+| `supplySync(Supplier)` / `supplyAsync(Supplier)` | main / background | returns `CompletableFuture`; cancelled futures fail with `CancellationException` on shutdown |
+| `mainThreadExecutor()` / `asyncExecutor()` | main / background | for `CompletableFuture` chains |
+| `activeTaskCount()` | | tasks not yet finished or cancelled |
+
+Folia is not supported yet, because its region threads do not fit a single main thread.

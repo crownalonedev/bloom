@@ -1,0 +1,40 @@
+---
+title: Modules
+description: Every Bloom artifact, what it contains, what it depends on and when to add it.
+---
+
+All artifacts share the Maven group `io.github.crownalonedev.bloom` and one version.
+
+| Artifact | Contains | Depends on | Bytecode |
+| --- | --- | --- | --- |
+| `bloom-api` | Platform model, capabilities, scheduler and service interfaces, `Placeholder`, `Cooldowns`, `Durations`, `ExpiringCache` | nothing | Java 8 |
+| `bloom-bukkit` | `Bloom`, `BloomOptions`, `Messenger`, `Events`, adapter interfaces | bloom-api | Java 8 |
+| `bloom-items` | `Items`, `ItemBuilder`, `CustomItem`, `MaterialMappings` | bloom-bukkit | Java 8 |
+| `bloom-gui` | `Menus`, `Menu`, `Button`, `ConfirmMenu`, `MenuTemplates` | bloom-items | Java 8 |
+| `bloom-config` | `YamlConfig`, validation, migrations, `TypeSerializer` | bloom-api, SnakeYAML 2.7 | Java 8 |
+| `bloom-storage` | `Database`, `Migration`, `SqlRepository` | bloom-api, HikariCP 4.0.3 | Java 8 |
+| `bloom-testing` | `ManualScheduler`, `TestClock` | bloom-api | Java 8 |
+| `bloom-legacy` | Adapter for 1.7.10 to 1.8.9 | bloom-bukkit | Java 8 |
+| `bloom-modern` | Adapter for Paper 1.21.1 to 26.3.x | bloom-bukkit | Java 21 |
+
+`bloom-common` also appears in your dependency tree. It holds internal implementations and is a runtime-only
+dependency, so your code cannot compile against it by accident. Its contents may change in any release.
+
+## Adapters are runtime-only
+
+Your code never references adapter classes; Bloom finds them by name. Declare them with `runtimeOnly` so they are
+shaded into your jar but stay out of your compile classpath.
+
+## Third-party libraries
+
+- **SnakeYAML 2.7** (with `bloom-config`). Servers bundle different, incompatible SnakeYAML versions, so Bloom brings
+  its own. Relocate `org.yaml.snakeyaml.`.
+- **HikariCP 4.0.3** and **SLF4J API** (with `bloom-storage`). HikariCP 4 is the last line that runs on Java 8; its API
+  is compatible with newer versions if your plugin is modern-only. Relocate `com.zaxxer.hikari.` and `org.slf4j.`.
+  Hikari's own log output is silent unless you add an SLF4J binding.
+- **JDBC drivers** are not bundled. Servers ship SQLite and MySQL drivers; shade MariaDB's driver yourself.
+
+## Logging
+
+Bloom logs through your plugin's logger (`java.util.logging`), so messages appear under your plugin's name on every
+server without extra libraries.

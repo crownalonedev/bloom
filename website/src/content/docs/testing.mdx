@@ -1,0 +1,41 @@
+---
+title: Testing
+description: Unit-test plugin logic without a server, test against MockBukkit, and how Bloom itself is verified.
+---
+
+## Unit tests without a server
+
+Write game logic against `BloomScheduler` and `Clock` instead of Bukkit's scheduler and `System.currentTimeMillis()`,
+then drive time yourself with `bloom-testing`:
+
+```java snippet="testing.countdown"
+```
+
+`ManualScheduler` runs nothing until you call `tick()`. "Async" tasks also run during ticks, on the test thread, so tests
+need no sleeps. It shares the real scheduler's cancellation and error handling. `TestClock` does the same for
+`Cooldowns` and `ExpiringCache`.
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    testImplementation("io.github.crownalonedev.bloom:bloom-testing:0.1.0-SNAPSHOT")
+}
+```
+
+## MockBukkit
+
+For modern Paper behaviour you can test with [MockBukkit](https://mockbukkit.org): Bloom detects it and loads the
+modern adapter. MockBukkit only exists for modern Paper; there is no maintained mock for 1.8.
+
+<Callout type="warning">
+MockBukkit reports features it has not implemented as **skipped** tests, not failures. Check skip counts, or fail the
+build on skips as Bloom's own integration tests do; otherwise untested code looks tested.
+</Callout>
+
+## How Bloom is tested
+
+- Unit tests for every module; the server-independent modules also run on a real Java 8 runtime.
+- MockBukkit integration tests that load the real modern adapter, plus every example plugin's shaded and relocated jar.
+- Compile checks of the modern adapter against Paper 1.21.1, 1.21.11 and 26.3.
+- A real-server harness, `scripts/realserver/run.sh`, which downloads an official Paper or PaperSpigot build, checks
+  its SHA-256, starts it with a self-test plugin and reports the result. Running a server means accepting the
+  Minecraft EULA, so the script only runs when you set `BLOOM_ACCEPT_MINECRAFT_EULA=true` yourself.

@@ -1,0 +1,101 @@
+---
+title: Menus
+description: Inventory menus with buttons, layouts, pagination, back navigation, per-player state and confirmation dialogs.
+---
+
+Menus come from `bloom-gui`. You describe a `Menu` once and open it for any number of players; each player gets their
+own `MenuView` with its own page and state. `Menus.of(bloom)` registers the listeners the first time you use it.
+
+## A first menu
+
+```java snippet="gui.basic"
+```
+
+Slots are numbered from 0, left to right, top to bottom. `button(row, column, button)` is also available.
+`fill(...)` puts a button into every slot that ends up empty.
+
+## Layouts
+
+Describe the menu as rows of nine characters and bind characters to buttons. Spaces are empty slots; an unbound
+character is an error that names the row and column.
+
+```java snippet="gui.layout"
+```
+
+## Buttons
+
+```java snippet="gui.buttons"
+```
+
+- `Button.of(item)` is a decoration; `Button.of(item, handler)` is clickable.
+- `Button.dynamic(view -> item)` computes the item on every render for that viewer.
+- `permission(node)` hides the button from players without the permission; `permission(node, item)` shows `item`
+  instead and ignores clicks.
+- `visibleWhen(condition)` hides the button when the condition is false.
+
+Buttons are immutable, so one button can be shared by many menus.
+
+## Clicks
+
+The handler receives a `ClickContext`: `player()`, `kind()` (`LEFT`, `SHIFT_RIGHT`, `NUMBER_KEY` and so on),
+`slot()`, `view()` and navigation methods. Navigation (`open`, `back`, `close`) happens on the next tick, because
+opening or closing inventories inside a click event is unsafe on Bukkit servers. `refresh()` updates the items
+immediately.
+
+## Per-player state and refreshing
+
+```java snippet="gui.state"
+```
+
+State lives as long as the player's view: it survives refreshes, page changes and returning with `back`, and is
+discarded when the player closes the menu. `refreshEvery(ticks)` re-renders the menu for every viewer while it is
+open, which suits timers.
+
+## Pagination
+
+```java snippet="gui.paginated"
+```
+
+The page source runs on every render and returns all buttons; Bloom slices them into pages. Content goes into every
+slot without a button, or the slots you pass to `contentSlots(...)`. Previous and next buttons appear only when there
+is a page to go to. Titles can use `{page}`, `{pages}` and `{player}`.
+
+## Navigation and history
+
+```java snippet="gui.navigation"
+```
+
+Opening a menu from another Bloom menu remembers the previous one, up to 16 levels deep. Closing the inventory clears
+the history.
+
+## Confirmation dialogs
+
+```java snippet="gui.confirm"
+```
+
+## Templates
+
+```java snippet="gui.templates"
+```
+
+`MenuTemplates.border`, `MenuTemplates.fill` and `MenuTemplates.paged` cover the common layouts.
+
+## Safety
+
+Bloom cancels **every** click and drag while one of its menus is open: clicks in the menu, clicks in the player's own
+inventory, shift-clicks, number-key swaps, double-click collection and drags. If another plugin un-cancels a click,
+Bloom cancels it again at the highest priority and logs one warning. Items can never move into or out of a Bloom menu.
+
+Button handlers run at most once per click. A double click's second event is ignored, and a short per-player debounce
+stops spam clicking from buying the same thing twice:
+
+```java snippet="gui.service"
+```
+
+On 1.7 and 1.8 the player's inventory is resent after cancelled clicks, which removes client-side ghost items.
+Open menus are closed when the player quits and when your plugin shuts down, and their `onClose` handlers run.
+
+<Callout type="compat">
+1.7 and 1.8 allow at most 32 characters in an inventory title, colour codes included. Longer titles are truncated
+with one warning. Modern Paper uses component titles with no such limit.
+</Callout>

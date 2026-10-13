@@ -1,0 +1,94 @@
+---
+title: Configuration
+description: YAML files with bundled defaults, typed getters, object mapping, validation, migrations and saves that keep comments.
+---
+
+`bloom-config` reads and writes YAML with its own SnakeYAML copy, so it behaves the same on every server. It has no
+Bukkit dependency.
+
+## Loading a file
+
+```java snippet="config.load"
+```
+
+If the file does not exist, Bloom copies your bundled `config.yml` **byte for byte**, so your comments and layout
+reach the server owner unchanged.
+
+## Reading values
+
+```java snippet="config.getters"
+```
+
+A value missing from the file falls back to the bundled default. Getters without a fallback argument throw if the
+value is missing everywhere. When a section exists in the file, `keys()` returns only the file's keys, so a kit a
+server owner deleted does not come back from the defaults.
+
+Mistakes in the file produce messages that point at the line:
+
+```text
+config.yml line 7: 'homes.max-homes' expected a whole number but found 'ten'
+Invalid YAML in config.yml at line 12, column 3: mapping values are not allowed here.
+Check indentation (spaces only, no tabs) and quoting.
+```
+
+## Mapping to classes
+
+```java snippet="config.pojo"
+```
+
+Fields map to kebab-case keys (`maxHomes` becomes `max-homes`) unless `@ConfigKey` says otherwise. Missing keys keep
+the field's default value. Supported field types: strings, numbers, booleans, characters, enums (case-insensitive),
+`UUID`, `Duration`, `List`, `Set`, `Map<String, ...>`, nested classes with a no-argument constructor, and anything with a
+registered serializer.
+
+## Validation
+
+```java snippet="config.validate"
+```
+
+All problems are reported at once, each with its line, so a server owner can fix everything in one edit.
+
+## Migrations
+
+```java snippet="config.migrate"
+```
+
+Before migrating, Bloom copies the file to `config.yml.v1.<timestamp>.bak`. If a migration throws, the file is left
+untouched. A file with a higher version than your plugin understands is refused rather than downgraded.
+
+## Reloading
+
+```java snippet="config.reload"
+```
+
+`reload()` swaps in the new values only if the whole file loads and migrates successfully.
+
+## Saving
+
+```java snippet="config.save"
+```
+
+`save()` edits the file's YAML structure instead of rewriting it from scratch: comments, blank lines and the formatting
+of untouched values stay as the server owner left them. The write is atomic (a temporary file replaces the original),
+so a crash never leaves half a file.
+
+<Callout type="note">
+Comments attached to keys that a migration moves or removes are dropped with that key; the file's header comment is
+always kept.
+</Callout>
+
+## New settings in updates
+
+`.addMissingDefaults(true)` writes settings that exist in your bundled defaults but not in the server's file, with
+their comments, after backing the file up. It is off by default; values that are only missing are read from the
+defaults anyway.
+
+## Custom types
+
+```java snippet="config.serializer"
+```
+
+## Safety
+
+Values are loaded with SnakeYAML's safe constructor (no arbitrary Java objects), duplicate keys are rejected, and
+alias expansion is limited to block "billion laughs" files.

@@ -1,0 +1,24 @@
+---
+title: Distribution
+description: Embedding Bloom in your plugin today, the planned standalone runtime, and licensing for closed-source plugins.
+---
+
+## Embedded (supported)
+
+Each plugin shades its own copy of Bloom and relocates it into its own package. Two plugins on one server can use
+different Bloom versions without conflict, and server owners install nothing extra.
+
+At startup Bloom checks how it was loaded. If its classes came from another plugin's class loader, it logs a warning:
+that happens when a plugin shades Bloom without relocating it, and another plugin then picks up those classes.
+With `BloomOptions.debug(true)` Bloom also tells you when your own copy is not relocated.
+
+## Standalone runtime (planned)
+
+A Bloom plugin that others depend on, instead of shading, is on the roadmap. It needs version negotiation between
+plugins and a lifecycle that survives individual plugins reloading. It will not be offered until both exist and are
+tested; until then, embed Bloom.
+
+## Licensing
+
+Bloom is MIT licensed. You can embed it in closed-source and commercial plugins; keep the license notice, for
+example in your jar's `META-INF` or your documentation.

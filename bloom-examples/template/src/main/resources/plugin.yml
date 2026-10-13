@@ -1,0 +1,7 @@
+# @snippet:install.pluginyml
+name: MyPlugin
+version: '${version}'
+main: com.example.myplugin.MyPlugin
+# Ignored by 1.7/1.8; tells modern Paper this is not a legacy (pre-1.13) plugin.
+api-version: '1.21'
+# @end

@@ -1,0 +1,74 @@
+---
+title: Items
+description: Build items with modern material names on every version, identify custom items reliably and store item data.
+---
+
+`Items.of(bloom)` returns the item service. It needs the `bloom-items` module.
+
+## Building items
+
+```java snippet="items.builder"
+```
+
+Names and lore use the plugin's text format (see [Messaging](/docs/messaging#formats)) and render white and
+non-italic unless you colour them, on every version. `enchant` accepts modern keys (`sharpness`) and legacy Bukkit
+names (`DAMAGE_ALL`); enchantments a server does not know are skipped with a warning.
+
+| Method | Needs |
+| --- | --- |
+| `name`, `lore`, `addLore`, `amount`, `enchant`, `glow`, `placeholders`, `format`, `meta` | nothing |
+| `flags` | `ITEM_FLAGS` (1.8+) |
+| `unbreakable` | `UNBREAKABLE_ITEMS` |
+| `customModelData` | `CUSTOM_MODEL_DATA` (modern) |
+| `data`, `customId` | `PERSISTENT_DATA_CONTAINER` or `ITEM_NBT_TAGS` |
+
+`glow()` uses the native enchantment glint on modern Paper. On 1.8 it adds a hidden enchantment; on 1.7.10, which has
+no item flags, that enchantment is visible in the tooltip.
+
+## Material names
+
+Write **modern (1.13+) names** everywhere. On legacy servers Bloom maps them to the old material and data value with
+a built-in table of more than 200 entries: coloured wool, glass, terracotta and carpet, dyes, woods, stone variants,
+flowers, heads, fish and renamed items. Legacy names and `NAME:DATA` are accepted too.
+
+```java snippet="items.materials"
+```
+
+Ambiguous names follow their modern meaning on every server: `MELON` is the block (`MELON_BLOCK` on 1.8) and `MAP`
+is the empty map. Potions, spawn eggs and banners changed how they store their type and are not mapped; build them
+with `meta(...)` for each version you support.
+
+## Custom items
+
+```java snippet="items.custom"
+```
+
+Custom ids live in the item's persistent data under your plugin's namespace (its lowercase name), so items keep them
+when renamed in an anvil, stored in chests or carried across restarts. Ids use lowercase letters, digits, `.`, `_`
+and `-`.
+
+## Item data
+
+```java snippet="items.data"
+```
+
+All data methods return a **copy**; the original stack is unchanged.
+
+<Callout type="compat">
+Modern Paper stores data in the `PersistentDataContainer`. Legacy servers store it in an NBT compound called
+`BloomData`, written through reflection that is probed at startup (`ITEM_NBT_TAGS`). Data written on one family is not
+readable on the other.
+</Callout>
+
+## Serialization
+
+```java snippet="items.serialize"
+```
+
+Use this to keep items in a database or config. The format depends on the platform family (Paper's byte format on
+modern servers, Bukkit object streams on legacy servers), and items cannot move between the two families.
+
+## Version-specific features
+
+```java snippet="items.capability"
+```

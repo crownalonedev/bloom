@@ -1,0 +1,27 @@
+# Bloom Framework
+
+> Cross-version Minecraft plugin framework (Bukkit/Spigot 1.7.10-1.8.9 and Paper 1.21.1-26.3.x). Version 0.1.0-SNAPSHOT, Maven group io.github.crownalonedev.bloom.
+
+Read /llms-full.txt for all documentation in one file and /api-manifest.json for every public type and method.
+Only use methods listed in the API manifest; do not invent APIs. Check capabilities before version-specific features.
+
+## Docs
+- [AI integration](/docs/ai-integration): Machine-readable API data, llms.txt, and the Bloom skill for Claude Code, Codex and OpenCode.
+- [Architecture](/docs/architecture): How Bloom is split into modules, how it picks a version adapter, and the rules that keep one jar working everywhere.
+- [Compatibility](/docs/compatibility): Supported Minecraft versions, Java requirements, capabilities per version, and what has actually been tested.
+- [Configuration](/docs/configuration): YAML files with bundled defaults, typed getters, object mapping, validation, migrations and saves that keep comments.
+- [Distribution](/docs/distribution): Embedding Bloom in your plugin today, the planned standalone runtime, and licensing for closed-source plugins.
+- [Events](/docs/events): Subscribe to Bukkit events with lambdas, filters and limits, and have them removed automatically on shutdown.
+- [Menus](/docs/gui): Inventory menus with buttons, layouts, pagination, back navigation, per-player state and confirmation dialogs.
+- [Installation](/docs/installation): Add Bloom to a Gradle plugin project for legacy, modern or cross-version servers, and shade it correctly.
+- [Introduction](/docs/introduction): What Bloom is, which servers it runs on, and how these docs are organised.
+- [Items](/docs/items): Build items with modern material names on every version, identify custom items reliably and store item data.
+- [Messaging](/docs/messaging): Chat, action bars, titles and boss bars with placeholders, MiniMessage and legacy colour codes on every version.
+- [Migration guides](/docs/migration): Moving an existing Bukkit plugin to Bloom, and upgrading between Bloom versions.
+- [Modules](/docs/modules): Every Bloom artifact, what it contains, what it depends on and when to add it.
+- [Quickstart](/docs/quickstart): Build a small shop plugin with a menu, items and messages that runs on 1.8 and on Paper 26.
+- [Scheduling](/docs/scheduling): Run code later, repeatedly or off the main thread, with tasks that are cleaned up automatically.
+- [Storage](/docs/storage): SQLite, MySQL and MariaDB with connection pooling, asynchronous queries, transactions, migrations and repositories.
+- [Testing](/docs/testing): Unit-test plugin logic without a server, test against MockBukkit, and how Bloom itself is verified.
+- [Troubleshooting](/docs/troubleshooting): Startup errors, build problems and runtime warnings, with what they mean and how to fix them.
+- [Utilities](/docs/utilities): Cooldowns, human-friendly durations and a small expiring cache.

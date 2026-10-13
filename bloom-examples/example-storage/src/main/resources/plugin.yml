@@ -1,0 +1,8 @@
+name: BloomExampleStorage
+version: '${version}'
+main: io.github.crownalonedev.bloomexamples.storage.StorageExamplePlugin
+api-version: '1.21'
+description: Bloom example - SQLite statistics with migrations and a repository.
+commands:
+  stats:
+    description: Show your kills and deaths.

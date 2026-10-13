@@ -1,0 +1,66 @@
+---
+title: Troubleshooting
+description: Startup errors, build problems and runtime warnings, with what they mean and how to fix them.
+---
+
+## Bloom does not start
+
+### "cannot run on ... is not supported"
+
+The server version has no adapter. The message lists the supported ranges. Common cases:
+
+- **1.9 to 1.21.0**: not supported. Use 1.8.x or Paper 1.21.1+.
+- **Spigot 1.21+**: run Paper instead; the modern adapter needs Paper's API.
+- **Newer than 26.3.x**: update Bloom, or opt in with `allowNewerUntestedVersions(true)` after testing yourself.
+- **Folia**: not supported yet.
+
+### "needs the Bloom modern adapter, but it is not in the plugin jar"
+
+Add `runtimeOnly("io.github.crownalonedev.bloom:bloom-modern:...")` (or `bloom-legacy`) and make sure the shadow jar
+contains it. If you use `minimize()`, remove it: minimizers cannot see that adapters are loaded by name.
+
+### "Bloom is already running for plugin X"
+
+Either `Bloom.enable` was called twice without `shutdown()`, or two plugins shade Bloom **without relocating** it and
+share its classes. Relocate Bloom in every plugin that embeds it.
+
+### "was compiled for a newer Java version"
+
+The modern adapter needs Java 21. This message on a 1.21+ server means the server runs on an older Java than Paper
+requires.
+
+## Build problems
+
+### "Dependency resolution is looking for a library compatible with JVM runtime version 8"
+
+Your plugin targets Java 8 and depends on `bloom-modern` (Java 21). Add `java { disableAutoTargetJvm() }`. See
+[Installation](/docs/installation#why-disableautotargetjvm).
+
+### My own classes were relocated
+
+A relocation pattern without a trailing dot matches every package that starts with the same text. Use
+`relocate("io.github.crownalonedev.bloom.", ".../libs/bloom.")` with the trailing dots.
+
+### NoSuchMethodError or IncompatibleClassChangeError on one server version
+
+Your own code called a Bukkit method whose signature differs between versions, for example
+`Bukkit.getOnlinePlayers()` (array on 1.7.10) or a method on `InventoryView` (class before 1.21, interface after).
+Use Bloom's adapter (`bloom.adapter().players().onlinePlayers()`), or compile against the oldest API you support.
+
+## Runtime warnings
+
+| Warning | Meaning |
+| --- | --- |
+| `Messenger.actionBar was skipped: action bar messages are not available` | The server lacks the feature; see the unsupported feature policy |
+| `Inventory title ... is longer than 32 characters` | 1.7/1.8 limit; shorten the title |
+| `Another plugin un-cancelled a click in a Bloom menu` | Another plugin interferes with inventory clicks; Bloom re-cancelled it |
+| `Bloom classes were loaded by a different class loader` | Some plugin shades Bloom without relocation |
+| `Database did not finish N queued operation(s)` | Shutdown waited `shutdownTimeout`; those operations were cancelled |
+
+## Debug output
+
+```java
+Bloom.enable(this, BloomOptions.builder().debug(true).build());
+```
+
+Debug mode logs the result of each legacy feature probe and relocation details.

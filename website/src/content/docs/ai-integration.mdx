@@ -1,0 +1,40 @@
+---
+title: AI integration
+description: Machine-readable API data, llms.txt, and the Bloom skill for Claude Code, Codex and OpenCode.
+---
+
+Bloom publishes its API in forms coding agents can read, so they use methods that exist instead of plausible-sounding
+ones that do not.
+
+## What is available
+
+| Resource | Contents |
+| --- | --- |
+| [`/llms.txt`](/llms.txt) | Index of the documentation with one-line summaries |
+| [`/llms-full.txt`](/llms-full.txt) | All documentation pages in one file |
+| [`/api-manifest.json`](/api-manifest.json) | Every public type and member with signatures, Javadoc, `@since` and deprecation, generated from the source |
+| `docs/compatibility.json` (repository) | Supported versions, capabilities and verification status |
+| `.claude/skills/bloom/` (repository) | A Claude Code skill for building plugins with Bloom |
+| `AGENTS.md`, `CLAUDE.md` (repository) | Instructions for agents working on Bloom itself |
+
+All of these are generated from or kept next to the code: the API manifest by a Javadoc doclet during the build, the
+llms files from these docs, and the code samples here from compiled sources.
+
+## Using the skill
+
+Copy `.claude/skills/bloom/` from the Bloom repository into your plugin project's `.claude/skills/`. Claude Code then
+loads it when you ask for Bloom work. The skill tells the agent to:
+
+1. Find the Minecraft versions your plugin targets and pick dependencies accordingly.
+2. Read the Bloom version in your build and check the API manifest for that version instead of assuming the latest.
+3. Only call methods that appear in the manifest.
+4. Check capabilities before version-specific features and explain fallbacks.
+5. Build with Gradle and read Bloom's startup banner when debugging.
+
+For Codex, OpenCode and other agents, point them at `AGENTS.md`-style instructions that reference `/llms.txt` and
+`/api-manifest.json`; the skill's `SKILL.md` is plain Markdown and works as such a file.
+
+## Asking good questions
+
+Tell the agent your target versions ("Spigot 1.8.8 and Paper 1.21.11") and the Bloom version. Agents cannot know
+whether your servers are legacy or modern otherwise, and that choice changes the build setup.

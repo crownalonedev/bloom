@@ -1,0 +1,92 @@
+---
+title: Storage
+description: SQLite, MySQL and MariaDB with connection pooling, asynchronous queries, transactions, migrations and repositories.
+---
+
+`bloom-storage` runs SQL on its own threads and hands you `CompletableFuture`s. It does not depend on Bukkit, and it is
+not an ORM: you write SQL, Bloom takes care of connections, threads, parameters and shutdown.
+
+## Opening a database
+
+```java snippet="storage.open"
+```
+
+SQLite uses one connection by default, which serialises writes and avoids "database is locked" errors, plus WAL mode,
+foreign keys and a busy timeout. For MySQL:
+
+```java snippet="storage.mysql"
+```
+
+Bloom picks the JDBC driver the server provides: SQLite and MySQL drivers ship with Spigot and Paper (on 1.8, Bloom
+falls back to the old `com.mysql.jdbc.Driver`). MariaDB's driver must be shaded into your plugin. If the database is
+unreachable, `build()` fails immediately with the address and a hint.
+
+<Callout type="note">
+Use a different `migrationTable` per plugin when several plugins share one MySQL database.
+</Callout>
+
+## Migrations
+
+```java snippet="storage.migrate"
+```
+
+Applied versions are recorded in the history table, and each migration runs in its own transaction. MySQL and
+MariaDB commit schema changes immediately, so keep each migration to one logical change. If the database has a newer
+version than your plugin's migrations, `migrate` fails instead of continuing with an unknown schema.
+
+## Queries
+
+```java snippet="storage.queries"
+```
+
+Results arrive on a database thread. Switch to the main thread with `mainThreadExecutor()` before touching players.
+
+Parameters are bound in order. Besides strings, numbers and booleans you can pass `UUID` (stored as text), enums
+(stored by name), `Instant` (epoch milliseconds), `Duration` (milliseconds), `byte[]` and `null`.
+
+| Method | Returns |
+| --- | --- |
+| `update(sql, params...)` | rows affected |
+| `insert(sql, params...)` | generated key, if any |
+| `batch(sql, rows)` | rows affected per parameter row |
+| `query(sql, mapper, params...)` | all rows |
+| `queryOne(sql, mapper, params...)` | first row, or empty |
+
+## Transactions
+
+```java snippet="storage.transaction"
+```
+
+The transaction commits when the callback returns and rolls back when it throws. Use `inTransaction(tx -> ...)` when
+there is no result. The `Transaction` object is only valid inside the callback.
+
+## Repositories
+
+```java snippet="storage.repository"
+```
+
+`SqlRepository` generates `find`, `findAll`, `save` (an upsert) and `delete`. Table and column names are validated as
+plain identifiers. On SQLite the upsert is `INSERT OR REPLACE`, which works on the old SQLite bundled with 1.8 servers
+but deletes and re-inserts the row, so `ON DELETE CASCADE` children are removed; MySQL uses
+`ON DUPLICATE KEY UPDATE`.
+
+## Blocking calls off the main thread
+
+```java snippet="storage.blocking"
+```
+
+`db.blocking()` throws `IllegalStateException` when called on the main thread, as reported by `mainThreadCheck`.
+
+## Limits and shutdown
+
+- Operations wait in a bounded queue (1,000 by default, `queueCapacity`). When it is full, new operations fail at once
+  with "The database queue is full" instead of piling up memory while the database is down.
+- `close()` stops accepting work, waits for queued operations (10 seconds by default, `shutdownTimeout`), fails
+  anything that could not run, and closes the pool. Register the database as a Bloom service and Bloom does this on
+  shutdown.
+- Error messages include the SQL statement but never parameter values, which may contain personal data.
+
+<Callout type="compat">
+SQLite is tested by Bloom's build on Java 8 and Java 21. Tests against real MySQL 8.4 and MariaDB 11 exist
+(`scripts/test-network-databases.sh`) and need Docker; they have not been run yet.
+</Callout>

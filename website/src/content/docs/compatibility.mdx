@@ -1,0 +1,65 @@
+---
+title: Compatibility
+description: Supported Minecraft versions, Java requirements, capabilities per version, and what has actually been tested.
+---
+
+## Versions
+
+<CompatibilityTable />
+
+Bloom uses these levels and never mixes them up:
+
+- **Supported**: Bloom starts and selects an adapter.
+- **Compile-verified**: the adapter's source compiled against that exact API version.
+- **Tested on MockBukkit**: Bloom's integration suite ran against MockBukkit's implementation of that API.
+- **Tested on a real server**: the self-test plugin ran on that server build and passed. No version has this
+  status yet; the harness exists (`scripts/realserver/run.sh`) and needs to be run by the project owner.
+
+## Capabilities
+
+Some features only exist on some servers. Bloom reports them as capabilities:
+
+<CapabilityTable />
+
+"Probed" means the adapter checks at startup whether the feature works on this exact server build. The result is
+printed in the startup banner and available at runtime:
+
+```java snippet="core.capabilities"
+```
+
+## What happens when a feature is missing
+
+| API | Without the capability |
+| --- | --- |
+| `Messenger.actionBar`, `Messenger.title` | Follows the [unsupported feature policy](/docs/messaging#unsupported-features): skip with one warning (default), chat fallback, or throw |
+| `Messenger.bossBar` | Returns a bar whose `isFunctional()` is false, or throws with `THROW` |
+| `ItemBuilder.customModelData`, `.unbreakable`, `.flags` | Skipped with one warning, or throws with `THROW` |
+| `Items.setData`, custom items | Throws `UnsupportedCapabilityException`: identification must not silently fail |
+| Menu titles over 32 characters on 1.7/1.8 | Truncated with one warning |
+
+## Java
+
+| Artifact | Bytecode | Needs |
+| --- | --- | --- |
+| Every module except `bloom-modern` | Java 8 | Java 8+ |
+| `bloom-modern` | Java 21 | Java 21+ (Paper 26.x itself needs Java 25) |
+
+Java 8 compatibility is checked by running the test suites of `bloom-api`, `bloom-common`, `bloom-config`,
+`bloom-storage` and `bloom-testing` on a real Java 8 runtime, not just by compiling for it.
+
+## Newer Paper versions
+
+Paper versions newer than 26.3.x are refused by default. If you test your plugin on a newer version yourself, you can
+opt in:
+
+```java
+Bloom.enable(this, BloomOptions.builder().allowNewerUntestedVersions(true).build());
+```
+
+Bloom logs a warning on every start in this mode.
+
+## Not supported
+
+- **1.9 to 1.21.0**: no adapter. Adding one is possible without changing the API.
+- **Spigot or CraftBukkit 1.21+**: the modern adapter needs Paper's Adventure API.
+- **Folia**: its region threads need a different scheduler design.

@@ -1,0 +1,5 @@
+{
+  "available": false,
+  "reason": "Run ./gradlew apiManifest to generate build/api/api-manifest.json",
+  "modules": []
+}

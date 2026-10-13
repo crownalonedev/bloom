@@ -1,0 +1,14 @@
+name: BloomExampleMenus
+version: '${version}'
+main: io.github.crownalonedev.bloomexamples.menus.MenusExamplePlugin
+api-version: '1.21'
+description: Bloom example - inventory menus, pagination and confirmation dialogs.
+commands:
+  shop:
+    description: Open the example shop menu.
+  players:
+    description: Open the paginated player list.
+permissions:
+  bloomexample.vip:
+    description: Access to the VIP button in the example shop.
+    default: op

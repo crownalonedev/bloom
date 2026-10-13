@@ -1,0 +1,5 @@
+name: BloomSelfTest
+version: '${version}'
+main: io.github.crownalonedev.bloomexamples.selftest.SelfTestPlugin
+api-version: '1.21'
+description: Runs Bloom checks on a real server, writes results.json and stops the server.

@@ -1,0 +1,12 @@
+name: BloomExampleConfig
+version: '${version}'
+main: io.github.crownalonedev.bloomexamples.config.ConfigExamplePlugin
+api-version: '1.21'
+description: Bloom example - YAML configuration with defaults, validation and migrations.
+commands:
+  bloomconfig:
+    description: Show settings, or reload with /bloomconfig reload.
+    permission: bloomexample.config
+permissions:
+  bloomexample.config:
+    default: op

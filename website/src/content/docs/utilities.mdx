@@ -1,0 +1,35 @@
+---
+title: Utilities
+description: Cooldowns, human-friendly durations and a small expiring cache.
+---
+
+These live in `bloom-api` and need no server.
+
+## Cooldowns
+
+```java snippet="utilities.cooldowns"
+```
+
+`tryUse` is atomic per key, so two quick clicks cannot both pass. Expired entries are removed when touched and by
+`prune()`; call it from a repeating task if many keys are never touched again. Cooldowns are kept in memory only.
+
+## Durations
+
+```java snippet="utilities.durations"
+```
+
+Units: `ms`, `s`, `m`, `h`, `d`, `w`. A bare number means seconds. Invalid input throws an exception whose message lists
+valid examples, which you can show to the player directly.
+
+## Expiring cache
+
+```java snippet="utilities.cache"
+```
+
+A least-recently-used cache with a time-to-live and a size limit. It uses one lock, so it suits modest caches; for very
+hot paths, use a dedicated caching library.
+
+## Ticks
+
+`Ticks.from(Duration)` rounds up to whole ticks, so a positive duration never becomes zero. `Ticks.toDuration(long)`
+and `Ticks.seconds(long)` convert the other way.

@@ -1,0 +1,1264 @@
+# Bloom Framework documentation (version 0.1.0-SNAPSHOT)
+
+# AI integration
+
+URL: /docs/ai-integration
+
+Machine-readable API data, llms.txt, and the Bloom skill for Claude Code, Codex and OpenCode.
+
+Bloom publishes its API in forms coding agents can read, so they use methods that exist instead of plausible-sounding
+ones that do not.
+
+## What is available
+
+| Resource | Contents |
+| --- | --- |
+| [`/llms.txt`](/llms.txt) | Index of the documentation with one-line summaries |
+| [`/llms-full.txt`](/llms-full.txt) | All documentation pages in one file |
+| [`/api-manifest.json`](/api-manifest.json) | Every public type and member with signatures, Javadoc, `@since` and deprecation, generated from the source |
+| `docs/compatibility.json` (repository) | Supported versions, capabilities and verification status |
+| `.claude/skills/bloom/` (repository) | A Claude Code skill for building plugins with Bloom |
+| `AGENTS.md`, `CLAUDE.md` (repository) | Instructions for agents working on Bloom itself |
+
+All of these are generated from or kept next to the code: the API manifest by a Javadoc doclet during the build, the
+llms files from these docs, and the code samples here from compiled sources.
+
+## Using the skill
+
+Copy `.claude/skills/bloom/` from the Bloom repository into your plugin project's `.claude/skills/`. Claude Code then
+loads it when you ask for Bloom work. The skill tells the agent to:
+
+1. Find the Minecraft versions your plugin targets and pick dependencies accordingly.
+2. Read the Bloom version in your build and check the API manifest for that version instead of assuming the latest.
+3. Only call methods that appear in the manifest.
+4. Check capabilities before version-specific features and explain fallbacks.
+5. Build with Gradle and read Bloom's startup banner when debugging.
+
+For Codex, OpenCode and other agents, point them at `AGENTS.md`-style instructions that reference `/llms.txt` and
+`/api-manifest.json`; the skill's `SKILL.md` is plain Markdown and works as such a file.
+
+## Asking good questions
+
+Tell the agent your target versions ("Spigot 1.8.8 and Paper 1.21.11") and the Bloom version. Agents cannot know
+whether your servers are legacy or modern otherwise, and that choice changes the build setup.
+
+---
+
+# Architecture
+
+URL: /docs/architecture
+
+How Bloom is split into modules, how it picks a version adapter, and the rules that keep one jar working everywhere.
+
+## Layers
+
+```text
+your plugin
+   │  uses
+   ▼
+bloom-gui ── bloom-items ── bloom-bukkit ─────── bloom-api   (stable contracts, Java 8, no dependencies)
+                               │                    ▲
+                               │ loads by name       │
+                     ┌─────────┴──────────┐   bloom-config, bloom-storage, bloom-testing
+                     ▼                    ▼
+               bloom-legacy          bloom-modern
+            (1.7.10 – 1.8.9)    (Paper 1.21.1 – 26.3.x)
+```
+
+- **bloom-api** holds the contracts: platform model, capabilities, scheduler interfaces, text types and utilities.
+  It has no dependencies.
+- **bloom-bukkit** is the runtime for Bukkit-family servers: `Bloom`, detection, the adapter interfaces, the
+  scheduler, messages and events.
+- **Feature modules** (`bloom-items`, `bloom-gui`) build on it. `bloom-config` and `bloom-storage` do not depend on
+  Bukkit at all.
+- **Adapters** contain every piece of version-specific code.
+
+## Startup
+
+When you call `Bloom.enable(this)`:
+
+1. **Detect.** Bloom reads the server name and version strings and probes a few classes to tell CraftBukkit,
+   Spigot, PaperSpigot, Paper, Paper forks and Folia apart.
+2. **Decide.** A single policy class decides whether this server is supported and which adapter family serves it.
+   If not supported, Bloom throws `BloomStartupException` with the reason and what to do.
+3. **Load.** Bloom loads the chosen adapter class by name. The name is derived from Bloom's own runtime package, so
+   it still works after you relocate Bloom. The other adapter is never touched, which matters because the modern
+   adapter is Java 21 bytecode and cannot even be loaded on Java 8.
+4. **Probe.** The adapter checks optional features. On 1.8 that includes reflection-based action bars and item NBT.
+   The result is the set of **capabilities**.
+5. **Start services.** Scheduler, events and messages start, and Bloom logs one banner line with the version,
+   platform, adapter and capabilities.
+
+## Shutdown
+
+`bloom.shutdown()` closes everything in reverse order of creation: feature services first (open menus close,
+databases finish queued work), then event subscriptions, then scheduled tasks, then the adapter. Errors while closing
+are logged and do not stop the rest.
+
+<Callout type="note">
+Bloom does not shut itself down on `PluginDisableEvent`, because Bukkit fires that event before your `onDisable`
+runs, and you may still need Bloom there to save data. Call `bloom.shutdown()` at the end of `onDisable`.
+</Callout>
+
+## One jar, many APIs
+
+Shared code is compiled once against spigot-api 1.8.8 and may only use Bukkit members whose binary shape is the same
+on every supported server. These differences are handled by adapters instead:
+
+| Difference | Where it bites |
+| --- | --- |
+| `Bukkit.getOnlinePlayers()` returns an array on 1.7.10, a collection later | 1.7.10 |
+| `InventoryView` is a class before 1.21 and an interface after | 1.21+ |
+| `ItemMeta.spigot()` does not exist on modern Paper | 1.21+ |
+| `ItemFlag` does not exist on 1.7.10 | 1.7.10 |
+| Materials were renamed and data values removed in 1.13 | everywhere |
+| Inventory titles longer than 32 characters throw | 1.7, 1.8 |
+
+## Threads
+
+- Players, worlds and inventories are touched only on the main thread. APIs that need it check and throw with an
+  explanation, for example `Menus.open` and `MenuView.refresh`.
+- Storage runs on its own bounded pool; results come back as `CompletableFuture`s you move to the main thread with
+  `scheduler().mainThreadExecutor()`.
+- Navigation from inside menu click handlers is deferred to the next tick.
+
+## Identifying items
+
+Custom items are recognised by a namespaced value in the item's persistent data, never by name or lore:
+`PersistentDataContainer` on Paper, an NBT compound named `BloomData` on 1.7 and 1.8. Values written on one family are
+not readable on the other; servers do not switch families, so Bloom does not bridge them.
+
+---
+
+# Compatibility
+
+URL: /docs/compatibility
+
+Supported Minecraft versions, Java requirements, capabilities per version, and what has actually been tested.
+
+## Versions
+
+<CompatibilityTable />
+
+Bloom uses these levels and never mixes them up:
+
+- **Supported**: Bloom starts and selects an adapter.
+- **Compile-verified**: the adapter's source compiled against that exact API version.
+- **Tested on MockBukkit**: Bloom's integration suite ran against MockBukkit's implementation of that API.
+- **Tested on a real server**: the self-test plugin ran on that server build and passed. No version has this
+  status yet; the harness exists (`scripts/realserver/run.sh`) and needs to be run by the project owner.
+
+## Capabilities
+
+Some features only exist on some servers. Bloom reports them as capabilities:
+
+<CapabilityTable />
+
+"Probed" means the adapter checks at startup whether the feature works on this exact server build. The result is
+printed in the startup banner and available at runtime:
+
+```java snippet="core.capabilities"
+```
+
+## What happens when a feature is missing
+
+| API | Without the capability |
+| --- | --- |
+| `Messenger.actionBar`, `Messenger.title` | Follows the [unsupported feature policy](/docs/messaging#unsupported-features): skip with one warning (default), chat fallback, or throw |
+| `Messenger.bossBar` | Returns a bar whose `isFunctional()` is false, or throws with `THROW` |
+| `ItemBuilder.customModelData`, `.unbreakable`, `.flags` | Skipped with one warning, or throws with `THROW` |
+| `Items.setData`, custom items | Throws `UnsupportedCapabilityException`: identification must not silently fail |
+| Menu titles over 32 characters on 1.7/1.8 | Truncated with one warning |
+
+## Java
+
+| Artifact | Bytecode | Needs |
+| --- | --- | --- |
+| Every module except `bloom-modern` | Java 8 | Java 8+ |
+| `bloom-modern` | Java 21 | Java 21+ (Paper 26.x itself needs Java 25) |
+
+Java 8 compatibility is checked by running the test suites of `bloom-api`, `bloom-common`, `bloom-config`,
+`bloom-storage` and `bloom-testing` on a real Java 8 runtime, not just by compiling for it.
+
+## Newer Paper versions
+
+Paper versions newer than 26.3.x are refused by default. If you test your plugin on a newer version yourself, you can
+opt in:
+
+```java
+Bloom.enable(this, BloomOptions.builder().allowNewerUntestedVersions(true).build());
+```
+
+Bloom logs a warning on every start in this mode.
+
+## Not supported
+
+- **1.9 to 1.21.0**: no adapter. Adding one is possible without changing the API.
+- **Spigot or CraftBukkit 1.21+**: the modern adapter needs Paper's Adventure API.
+- **Folia**: its region threads need a different scheduler design.
+
+---
+
+# Configuration
+
+URL: /docs/configuration
+
+YAML files with bundled defaults, typed getters, object mapping, validation, migrations and saves that keep comments.
+
+`bloom-config` reads and writes YAML with its own SnakeYAML copy, so it behaves the same on every server. It has no
+Bukkit dependency.
+
+## Loading a file
+
+```java snippet="config.load"
+```
+
+If the file does not exist, Bloom copies your bundled `config.yml` **byte for byte**, so your comments and layout
+reach the server owner unchanged.
+
+## Reading values
+
+```java snippet="config.getters"
+```
+
+A value missing from the file falls back to the bundled default. Getters without a fallback argument throw if the
+value is missing everywhere. When a section exists in the file, `keys()` returns only the file's keys, so a kit a
+server owner deleted does not come back from the defaults.
+
+Mistakes in the file produce messages that point at the line:
+
+```text
+config.yml line 7: 'homes.max-homes' expected a whole number but found 'ten'
+Invalid YAML in config.yml at line 12, column 3: mapping values are not allowed here.
+Check indentation (spaces only, no tabs) and quoting.
+```
+
+## Mapping to classes
+
+```java snippet="config.pojo"
+```
+
+Fields map to kebab-case keys (`maxHomes` becomes `max-homes`) unless `@ConfigKey` says otherwise. Missing keys keep
+the field's default value. Supported field types: strings, numbers, booleans, characters, enums (case-insensitive),
+`UUID`, `Duration`, `List`, `Set`, `Map<String, ...>`, nested classes with a no-argument constructor, and anything with a
+registered serializer.
+
+## Validation
+
+```java snippet="config.validate"
+```
+
+All problems are reported at once, each with its line, so a server owner can fix everything in one edit.
+
+## Migrations
+
+```java snippet="config.migrate"
+```
+
+Before migrating, Bloom copies the file to `config.yml.v1.<timestamp>.bak`. If a migration throws, the file is left
+untouched. A file with a higher version than your plugin understands is refused rather than downgraded.
+
+## Reloading
+
+```java snippet="config.reload"
+```
+
+`reload()` swaps in the new values only if the whole file loads and migrates successfully.
+
+## Saving
+
+```java snippet="config.save"
+```
+
+`save()` edits the file's YAML structure instead of rewriting it from scratch: comments, blank lines and the formatting
+of untouched values stay as the server owner left them. The write is atomic (a temporary file replaces the original),
+so a crash never leaves half a file.
+
+<Callout type="note">
+Comments attached to keys that a migration moves or removes are dropped with that key; the file's header comment is
+always kept.
+</Callout>
+
+## New settings in updates
+
+`.addMissingDefaults(true)` writes settings that exist in your bundled defaults but not in the server's file, with
+their comments, after backing the file up. It is off by default; values that are only missing are read from the
+defaults anyway.
+
+## Custom types
+
+```java snippet="config.serializer"
+```
+
+## Safety
+
+Values are loaded with SnakeYAML's safe constructor (no arbitrary Java objects), duplicate keys are rejected, and
+alias expansion is limited to block "billion laughs" files.
+
+---
+
+# Distribution
+
+URL: /docs/distribution
+
+Embedding Bloom in your plugin today, the planned standalone runtime, and licensing for closed-source plugins.
+
+## Embedded (supported)
+
+Each plugin shades its own copy of Bloom and relocates it into its own package. Two plugins on one server can use
+different Bloom versions without conflict, and server owners install nothing extra.
+
+At startup Bloom checks how it was loaded. If its classes came from another plugin's class loader, it logs a warning:
+that happens when a plugin shades Bloom without relocating it, and another plugin then picks up those classes.
+With `BloomOptions.debug(true)` Bloom also tells you when your own copy is not relocated.
+
+## Standalone runtime (planned)
+
+A Bloom plugin that others depend on, instead of shading, is on the roadmap. It needs version negotiation between
+plugins and a lifecycle that survives individual plugins reloading. It will not be offered until both exist and are
+tested; until then, embed Bloom.
+
+## Licensing
+
+Bloom is MIT licensed. You can embed it in closed-source and commercial plugins; keep the license notice, for
+example in your jar's `META-INF` or your documentation.
+
+---
+
+# Events
+
+URL: /docs/events
+
+Subscribe to Bukkit events with lambdas, filters and limits, and have them removed automatically on shutdown.
+
+`bloom.events()` registers listeners that belong to your plugin and are removed by `bloom.shutdown()`. You can still
+use ordinary `@EventHandler` listeners alongside it.
+
+## Lambda subscriptions
+
+```java snippet="events.subscribe"
+```
+
+The handler runs at `NORMAL` priority and also receives cancelled events. Subscribe to concrete events such as
+`PlayerJoinEvent`; abstract ones such as `PlayerEvent` have no handler list and are rejected with an explanation.
+
+## Priority, filters and limits
+
+```java snippet="events.builder"
+```
+
+- `priority(...)` takes Bukkit's `EventPriority`.
+- `ignoreCancelled()` skips events another listener already cancelled.
+- `filter(...)` can be called several times; all filters must pass.
+- `limit(n)` unsubscribes after `n` handled events, which suits one-off reactions.
+
+## Classic listeners
+
+```java snippet="events.listener"
+```
+
+## Threads and errors
+
+Handlers run on the thread that fires the event: the main thread for most events, a background thread for
+asynchronous events such as `AsyncPlayerPreLoginEvent`. Exceptions are reported by the server with your plugin's
+name, exactly like exceptions from `@EventHandler` methods.
+
+---
+
+# Menus
+
+URL: /docs/gui
+
+Inventory menus with buttons, layouts, pagination, back navigation, per-player state and confirmation dialogs.
+
+Menus come from `bloom-gui`. You describe a `Menu` once and open it for any number of players; each player gets their
+own `MenuView` with its own page and state. `Menus.of(bloom)` registers the listeners the first time you use it.
+
+## A first menu
+
+```java snippet="gui.basic"
+```
+
+Slots are numbered from 0, left to right, top to bottom. `button(row, column, button)` is also available.
+`fill(...)` puts a button into every slot that ends up empty.
+
+## Layouts
+
+Describe the menu as rows of nine characters and bind characters to buttons. Spaces are empty slots; an unbound
+character is an error that names the row and column.
+
+```java snippet="gui.layout"
+```
+
+## Buttons
+
+```java snippet="gui.buttons"
+```
+
+- `Button.of(item)` is a decoration; `Button.of(item, handler)` is clickable.
+- `Button.dynamic(view -> item)` computes the item on every render for that viewer.
+- `permission(node)` hides the button from players without the permission; `permission(node, item)` shows `item`
+  instead and ignores clicks.
+- `visibleWhen(condition)` hides the button when the condition is false.
+
+Buttons are immutable, so one button can be shared by many menus.
+
+## Clicks
+
+The handler receives a `ClickContext`: `player()`, `kind()` (`LEFT`, `SHIFT_RIGHT`, `NUMBER_KEY` and so on),
+`slot()`, `view()` and navigation methods. Navigation (`open`, `back`, `close`) happens on the next tick, because
+opening or closing inventories inside a click event is unsafe on Bukkit servers. `refresh()` updates the items
+immediately.
+
+## Per-player state and refreshing
+
+```java snippet="gui.state"
+```
+
+State lives as long as the player's view: it survives refreshes, page changes and returning with `back`, and is
+discarded when the player closes the menu. `refreshEvery(ticks)` re-renders the menu for every viewer while it is
+open, which suits timers.
+
+## Pagination
+
+```java snippet="gui.paginated"
+```
+
+The page source runs on every render and returns all buttons; Bloom slices them into pages. Content goes into every
+slot without a button, or the slots you pass to `contentSlots(...)`. Previous and next buttons appear only when there
+is a page to go to. Titles can use `{page}`, `{pages}` and `{player}`.
+
+## Navigation and history
+
+```java snippet="gui.navigation"
+```
+
+Opening a menu from another Bloom menu remembers the previous one, up to 16 levels deep. Closing the inventory clears
+the history.
+
+## Confirmation dialogs
+
+```java snippet="gui.confirm"
+```
+
+## Templates
+
+```java snippet="gui.templates"
+```
+
+`MenuTemplates.border`, `MenuTemplates.fill` and `MenuTemplates.paged` cover the common layouts.
+
+## Safety
+
+Bloom cancels **every** click and drag while one of its menus is open: clicks in the menu, clicks in the player's own
+inventory, shift-clicks, number-key swaps, double-click collection and drags. If another plugin un-cancels a click,
+Bloom cancels it again at the highest priority and logs one warning. Items can never move into or out of a Bloom menu.
+
+Button handlers run at most once per click. A double click's second event is ignored, and a short per-player debounce
+stops spam clicking from buying the same thing twice:
+
+```java snippet="gui.service"
+```
+
+On 1.7 and 1.8 the player's inventory is resent after cancelled clicks, which removes client-side ghost items.
+Open menus are closed when the player quits and when your plugin shuts down, and their `onClose` handlers run.
+
+<Callout type="compat">
+1.7 and 1.8 allow at most 32 characters in an inventory title, colour codes included. Longer titles are truncated
+with one warning. Modern Paper uses component titles with no such limit.
+</Callout>
+
+---
+
+# Installation
+
+URL: /docs/installation
+
+Add Bloom to a Gradle plugin project for legacy, modern or cross-version servers, and shade it correctly.
+
+Bloom is a library you **embed** in your plugin: its classes are shaded into your jar and relocated into your own
+package. Nothing is installed on the server.
+
+<Callout type="warning" title="Not on a public repository yet">
+Bloom has not been released to Maven Central or GitHub Packages. Until it is, build it from source and publish it
+to your local Maven repository:
+
+```bash
+git clone https://github.com/crownalonedev/bloom.git
+cd bloom
+./gradlew publishToMavenLocal
+```
+
+Then add `mavenLocal()` to your plugin's repositories.
+</Callout>
+
+## Choose your target
+
+Bloom's modules are Java 8 bytecode except `bloom-modern`, which is Java 21. What you compile against decides which
+servers your jar can run on.
+
+<Tabs>
+<Tab label="Cross-version (1.7.10 to 26.x)">
+
+Compile against **spigot-api 1.8.8** as Java 8 bytecode and include **both adapters**. This is the setup the examples
+use. It is verified by building the standalone template in `bloom-examples/template`:
+
+```kotlin snippet="install.gradle-cross" title="build.gradle.kts"
+```
+
+</Tab>
+<Tab label="Legacy only (1.7.10 to 1.8.9)">
+
+The same as cross-version, without `bloom-modern` and without `disableAutoTargetJvm()`:
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
+    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.crownalonedev.bloom:bloom-legacy:0.1.0-SNAPSHOT")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release = 8
+}
+```
+
+</Tab>
+<Tab label="Modern only (Paper 1.21.1 to 26.x)">
+
+Compile against **paper-api** with Java 21 and include only `bloom-modern`. You can then use Paper APIs directly in
+your own code:
+
+```kotlin title="build.gradle.kts"
+repositories {
+    maven("https://repo.papermc.io/repository/maven-public/")
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.crownalonedev.bloom:bloom-modern:0.1.0-SNAPSHOT")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release = 21
+}
+```
+
+</Tab>
+</Tabs>
+
+## Pick modules
+
+Depend only on what you use; feature modules bring the core with them.
+
+| You need | Add |
+| --- | --- |
+| Messages, scheduler, events | `bloom-bukkit` |
+| Items | `bloom-items` |
+| Menus (includes items) | `bloom-gui` |
+| YAML configuration | `bloom-config` |
+| SQL storage | `bloom-storage` |
+| Unit-test helpers | `bloom-testing` (test scope) |
+
+## Relocate Bloom
+
+Every plugin that embeds Bloom must relocate it, so two plugins with different Bloom versions never share classes.
+Patterns must end with a dot, otherwise `io.github.crownalonedev.bloom` would also match your own package if it
+happens to start the same way.
+
+```kotlin title="build.gradle.kts"
+tasks.shadowJar {
+    relocate("io.github.crownalonedev.bloom.", "com.example.myplugin.libs.bloom.")
+    relocate("org.yaml.snakeyaml.", "com.example.myplugin.libs.snakeyaml.") // with bloom-config
+    relocate("com.zaxxer.hikari.", "com.example.myplugin.libs.hikari.")     // with bloom-storage
+    relocate("org.slf4j.", "com.example.myplugin.libs.slf4j.")              // with bloom-storage
+}
+```
+
+<Callout type="warning" title="Do not minimize">
+Do not call `minimize()` on the shadow jar. Bloom loads its adapters by name at runtime, so a minimizer cannot see
+that they are used and removes them. Bloom then fails to start with "the Bloom modern adapter is missing".
+</Callout>
+
+## Why disableAutoTargetJvm
+
+Gradle refuses to add a Java 21 library to a Java 8 project by default. Cross-version plugins need
+`java { disableAutoTargetJvm() }` because `bloom-modern` is Java 21 bytecode. This is safe: Bloom loads that adapter
+only on Paper servers, which require Java 21 or newer.
+
+## plugin.yml
+
+```yaml snippet="install.pluginyml" title="src/main/resources/plugin.yml"
+```
+
+## Your first class
+
+```java snippet="install.plugin" title="MyPlugin.java"
+```
+
+Build with `./gradlew shadowJar` and copy `build/libs/<name>.jar` into the server's `plugins` folder. The console
+shows a line like `Bloom 0.1.0-SNAPSHOT · Paper 1.21.11 (Java 21.0.5) · adapter: modern`.
+
+## Standalone runtime (planned)
+
+A shared Bloom runtime plugin that other plugins depend on is planned but not available. Embedding, as described
+above, is the only supported distribution today. See [Distribution](/docs/distribution).
+
+---
+
+# Introduction
+
+URL: /docs/introduction
+
+What Bloom is, which servers it runs on, and how these docs are organised.
+
+Bloom is a Java framework for Minecraft plugins on Bukkit-family servers. It gives you one API for the things
+almost every plugin needs, and runs the same plugin on two very different generations of Minecraft:
+
+- **Legacy**: Bukkit, Spigot and PaperSpigot **1.7.10 to 1.8.9** on Java 8, the home of most PvP and HCF servers.
+- **Modern**: Paper **1.21.1 to 1.21.11** on Java 21 and **26.1 to 26.3.x** on Java 25.
+
+Between them, Bukkit's API changed in ways that break compiled plugins: methods changed return types, classes became
+interfaces, materials were renamed and text moved to components. Bloom compiles your plugin against the oldest API,
+identifies the server when it starts, and loads a **version adapter** that handles the differences.
+
+## What you get
+
+| Area | Module | Highlights |
+| --- | --- | --- |
+| Core | `bloom-bukkit` | One-line startup, platform detection, scheduler, messages, events |
+| Menus | `bloom-gui` | Layouts, pagination, back navigation, confirmation dialogs, duplication-safe clicks |
+| Items | `bloom-items` | Modern material names everywhere, persistent custom item ids, serialization |
+| Configuration | `bloom-config` | Defaults, typed getters, validation with line numbers, migrations, comment-safe saves |
+| Storage | `bloom-storage` | SQLite, MySQL and MariaDB off the main thread, transactions, migrations |
+| Testing | `bloom-testing` | A tick-by-tick scheduler and a controllable clock |
+
+## How Bloom thinks about versions
+
+Bloom never pretends. If a server has no adapter, Bloom refuses to start and explains why. If a server lacks a
+feature (boss bars on 1.8, for example), Bloom reports it as a missing **capability** you can check, and each API
+documents what happens instead.
+
+<Callout type="compat">
+Bloom is pre-release software. The modern adapter is tested on MockBukkit (Paper 1.21.11 API) and compiles against
+Paper 1.21.1 and 26.3. The legacy adapter is unit-tested and compiles against Spigot 1.8.8; its real-server test runs
+are still pending. See [Compatibility](/docs/compatibility) for exactly what has been verified.
+</Callout>
+
+## Where to go next
+
+- New to Bloom: follow the [Quickstart](/docs/quickstart).
+- Setting up a build: [Installation](/docs/installation) covers legacy, modern and cross-version plugins.
+- Curious about the design: read [Architecture](/docs/architecture).
+- Using an AI coding agent: see [AI integration](/docs/ai-integration).
+
+---
+
+# Items
+
+URL: /docs/items
+
+Build items with modern material names on every version, identify custom items reliably and store item data.
+
+`Items.of(bloom)` returns the item service. It needs the `bloom-items` module.
+
+## Building items
+
+```java snippet="items.builder"
+```
+
+Names and lore use the plugin's text format (see [Messaging](/docs/messaging#formats)) and render white and
+non-italic unless you colour them, on every version. `enchant` accepts modern keys (`sharpness`) and legacy Bukkit
+names (`DAMAGE_ALL`); enchantments a server does not know are skipped with a warning.
+
+| Method | Needs |
+| --- | --- |
+| `name`, `lore`, `addLore`, `amount`, `enchant`, `glow`, `placeholders`, `format`, `meta` | nothing |
+| `flags` | `ITEM_FLAGS` (1.8+) |
+| `unbreakable` | `UNBREAKABLE_ITEMS` |
+| `customModelData` | `CUSTOM_MODEL_DATA` (modern) |
+| `data`, `customId` | `PERSISTENT_DATA_CONTAINER` or `ITEM_NBT_TAGS` |
+
+`glow()` uses the native enchantment glint on modern Paper. On 1.8 it adds a hidden enchantment; on 1.7.10, which has
+no item flags, that enchantment is visible in the tooltip.
+
+## Material names
+
+Write **modern (1.13+) names** everywhere. On legacy servers Bloom maps them to the old material and data value with
+a built-in table of more than 200 entries: coloured wool, glass, terracotta and carpet, dyes, woods, stone variants,
+flowers, heads, fish and renamed items. Legacy names and `NAME:DATA` are accepted too.
+
+```java snippet="items.materials"
+```
+
+Ambiguous names follow their modern meaning on every server: `MELON` is the block (`MELON_BLOCK` on 1.8) and `MAP`
+is the empty map. Potions, spawn eggs and banners changed how they store their type and are not mapped; build them
+with `meta(...)` for each version you support.
+
+## Custom items
+
+```java snippet="items.custom"
+```
+
+Custom ids live in the item's persistent data under your plugin's namespace (its lowercase name), so items keep them
+when renamed in an anvil, stored in chests or carried across restarts. Ids use lowercase letters, digits, `.`, `_`
+and `-`.
+
+## Item data
+
+```java snippet="items.data"
+```
+
+All data methods return a **copy**; the original stack is unchanged.
+
+<Callout type="compat">
+Modern Paper stores data in the `PersistentDataContainer`. Legacy servers store it in an NBT compound called
+`BloomData`, written through reflection that is probed at startup (`ITEM_NBT_TAGS`). Data written on one family is not
+readable on the other.
+</Callout>
+
+## Serialization
+
+```java snippet="items.serialize"
+```
+
+Use this to keep items in a database or config. The format depends on the platform family (Paper's byte format on
+modern servers, Bukkit object streams on legacy servers), and items cannot move between the two families.
+
+## Version-specific features
+
+```java snippet="items.capability"
+```
+
+---
+
+# Messaging
+
+URL: /docs/messaging
+
+Chat, action bars, titles and boss bars with placeholders, MiniMessage and legacy colour codes on every version.
+
+`bloom.messages()` returns a `Messenger`. Messengers are immutable: `withPrefix`, `withFormat` and
+`withUnsupportedPolicy` return new ones, so keep the variants you use as fields.
+
+## Sending messages
+
+```java snippet="messaging.send"
+```
+
+`send` adds the messenger's prefix; action bars, titles and boss bars never get the prefix. `broadcast` sends to every
+online player and the console.
+
+## Placeholders
+
+Write `{name}` in a template and pass `Placeholder.of("name", value)`. Substitution happens in one pass, so a value
+that itself contains `{other}` is not expanded again. Unknown placeholders are left as they are.
+
+Placeholder values are **plain text by default**: colour codes or MiniMessage tags inside them are neutralised. That
+makes it safe to insert player names and chat. Use `Placeholder.formatted` only for text you trust.
+
+```java snippet="messaging.escaping"
+```
+
+## Formats
+
+Bloom supports two markup formats on every server. The default is `TextFormat.LEGACY`; change it for the whole plugin
+with `BloomOptions.textFormat(...)` or per messenger with `withFormat`.
+
+| | `LEGACY` | `MINIMESSAGE` |
+| --- | --- | --- |
+| Example | `&dHello &lworld` | `<light_purple>Hello <bold>world` |
+| Paper 1.21+ / 26.x | Converted with Adventure, `&#RRGGBB` hex supported | Real MiniMessage |
+| 1.7 / 1.8 | Native | Converted by Bloom (see below) |
+
+```java snippet="messaging.minimessage"
+```
+
+<Callout type="compat" title="MiniMessage on 1.7 and 1.8">
+Bloom converts a documented subset to legacy colours: named colours, `<color:...>`, hex colours (mapped to the
+nearest of the 16 legacy colours, keeping saturated colours chromatic), all decorations and their negation, closing
+tags, `<reset>`, `<newline>`, `<pre>` and `\<` escapes. Gradients and transitions use their first colour. Click, hover,
+insertion, font and shadow tags keep their text but lose their effect. Unknown tags are printed literally, as
+MiniMessage does.
+</Callout>
+
+## Action bars and titles
+
+```java snippet="messaging.titles"
+```
+
+Title timings need the `TITLE_TIMINGS` capability; on 1.8 the client's default timings are used.
+
+## Boss bars
+
+Boss bars exist only on modern Paper (`BOSS_BAR`). They must be created and changed on the main thread, and Bloom
+hides them from all viewers on shutdown.
+
+```java snippet="messaging.bossbar"
+```
+
+## Unsupported features
+
+When a server lacks a feature, the messenger's `UnsupportedFeaturePolicy` decides what happens:
+
+| Policy | Effect |
+| --- | --- |
+| `SKIP` (default) | Nothing is sent; the method returns `false`; one warning per feature is logged |
+| `FALLBACK_TO_CHAT` | Action bars and titles are sent as chat messages; boss bars are skipped |
+| `THROW` | `UnsupportedCapabilityException` naming the capability and the platform |
+
+```java snippet="messaging.policy"
+```
+
+## Threads
+
+Chat, action bars and titles can be sent from any thread. Boss bars are main-thread only. For strings that must be
+plain legacy text (scoreboards, signs), use `messenger.legacy(template, placeholders...)`.
+
+---
+
+# Migration guides
+
+URL: /docs/migration
+
+Moving an existing Bukkit plugin to Bloom, and upgrading between Bloom versions.
+
+## From plain Bukkit code
+
+Bloom does not replace Bukkit: your plugin still extends `JavaPlugin` and uses Bukkit types such as `Player` and
+`ItemStack`. Move one area at a time.
+
+| You have | Replace with |
+| --- | --- |
+| `Bukkit.getScheduler().runTaskLater(...)` | `bloom.scheduler().syncLater(...)`; cancelled automatically |
+| `getServer().getPluginManager().registerEvents(...)` | `bloom.events().register(...)` or `subscribe(...)` |
+| `ChatColor.translateAlternateColorCodes('&', ...)` + string concatenation | `bloom.messages().send(player, template, Placeholder.of(...))` |
+| NMS packets for action bars and titles | `messages.actionBar(...)`, `messages.title(...)` |
+| `new ItemStack(Material.WOOL, 1, (short) 14)` | `items.builder("RED_WOOL")` |
+| Custom items recognised by display name | `items.define(id, builder)` and `customItem.matches(stack)` |
+| A `Listener` per menu, checking titles | `Menu.builder()` and `Menus.of(bloom).open(...)` |
+| `getConfig()` with manual checks | `YamlConfig` with defaults, validation and migrations |
+| JDBC on the main thread | `Database` with asynchronous queries |
+
+Two things to watch:
+
+- Items created before switching are not recognised as custom items, because they lack Bloom's persistent id. Give
+  players replacements, or match them once by your old method and re-tag them with `items.tag(stack, id)`.
+- Bloom's menus cancel all clicks while open. If old code relied on players taking items out of a GUI, give them the
+  item from a button handler instead.
+
+## Between Bloom versions
+
+Bloom is pre-1.0: minor versions may change APIs, and every change is listed in the [changelog](/changelog). From 1.0,
+Bloom follows semantic versioning: breaking changes only in major versions, deprecations at least one minor version
+before removal.
+
+Data formats are treated as compatibility promises: config files migrate with backups, database schemas migrate with
+history, and item ids and data keep their storage format.
+
+---
+
+# Modules
+
+URL: /docs/modules
+
+Every Bloom artifact, what it contains, what it depends on and when to add it.
+
+All artifacts share the Maven group `io.github.crownalonedev.bloom` and one version.
+
+| Artifact | Contains | Depends on | Bytecode |
+| --- | --- | --- | --- |
+| `bloom-api` | Platform model, capabilities, scheduler and service interfaces, `Placeholder`, `Cooldowns`, `Durations`, `ExpiringCache` | nothing | Java 8 |
+| `bloom-bukkit` | `Bloom`, `BloomOptions`, `Messenger`, `Events`, adapter interfaces | bloom-api | Java 8 |
+| `bloom-items` | `Items`, `ItemBuilder`, `CustomItem`, `MaterialMappings` | bloom-bukkit | Java 8 |
+| `bloom-gui` | `Menus`, `Menu`, `Button`, `ConfirmMenu`, `MenuTemplates` | bloom-items | Java 8 |
+| `bloom-config` | `YamlConfig`, validation, migrations, `TypeSerializer` | bloom-api, SnakeYAML 2.7 | Java 8 |
+| `bloom-storage` | `Database`, `Migration`, `SqlRepository` | bloom-api, HikariCP 4.0.3 | Java 8 |
+| `bloom-testing` | `ManualScheduler`, `TestClock` | bloom-api | Java 8 |
+| `bloom-legacy` | Adapter for 1.7.10 to 1.8.9 | bloom-bukkit | Java 8 |
+| `bloom-modern` | Adapter for Paper 1.21.1 to 26.3.x | bloom-bukkit | Java 21 |
+
+`bloom-common` also appears in your dependency tree. It holds internal implementations and is a runtime-only
+dependency, so your code cannot compile against it by accident. Its contents may change in any release.
+
+## Adapters are runtime-only
+
+Your code never references adapter classes; Bloom finds them by name. Declare them with `runtimeOnly` so they are
+shaded into your jar but stay out of your compile classpath.
+
+## Third-party libraries
+
+- **SnakeYAML 2.7** (with `bloom-config`). Servers bundle different, incompatible SnakeYAML versions, so Bloom brings
+  its own. Relocate `org.yaml.snakeyaml.`.
+- **HikariCP 4.0.3** and **SLF4J API** (with `bloom-storage`). HikariCP 4 is the last line that runs on Java 8; its API
+  is compatible with newer versions if your plugin is modern-only. Relocate `com.zaxxer.hikari.` and `org.slf4j.`.
+  Hikari's own log output is silent unless you add an SLF4J binding.
+- **JDBC drivers** are not bundled. Servers ship SQLite and MySQL drivers; shade MariaDB's driver yourself.
+
+## Logging
+
+Bloom logs through your plugin's logger (`java.util.logging`), so messages appear under your plugin's name on every
+server without extra libraries.
+
+---
+
+# Quickstart
+
+URL: /docs/quickstart
+
+Build a small shop plugin with a menu, items and messages that runs on 1.8 and on Paper 26.
+
+This walk-through builds the plugin from the homepage: a shop menu that feeds the player, opened when they join.
+It assumes you completed [Installation](/docs/installation) with `bloom-gui` and both adapters.
+
+## 1. Enable Bloom
+
+`Bloom.enable(this)` detects the server, picks the adapter and starts Bloom's services. `bloom.shutdown()` stops
+everything Bloom started for your plugin, in order. Always pair them.
+
+```java snippet="install.plugin" title="MyPlugin.java"
+```
+
+## 2. Build an item and a menu
+
+Items use **modern material names** on every server. On 1.8, `COOKED_BEEF` stays the same and names that changed in
+1.13, such as `LIME_WOOL`, are mapped to their legacy material and data value automatically.
+
+```java snippet="home.plugin" title="ShopPlugin.java"
+```
+
+A few things happen for you here:
+
+- The menu cancels every click and drag, so the item can never be taken out.
+- `click.close()` waits until the next tick, which is the safe moment to close an inventory.
+- `actionBar` shows an action bar on servers that have one and is skipped, with one console warning, on 1.7.10.
+- The join listener and the delayed task are removed when the plugin disables.
+
+## 3. Build and run
+
+```bash
+./gradlew shadowJar
+```
+
+Put the jar from `build/libs` into a test server's `plugins` folder and join. The startup log tells you which
+adapter Bloom chose and which capabilities the server has.
+
+## Next steps
+
+- [Menus](/docs/gui): layouts, pagination and navigation.
+- [Items](/docs/items): custom items that survive renames and server restarts.
+- [Configuration](/docs/configuration): let server owners change prices and titles.
+- [Storage](/docs/storage): keep player data in SQLite or MySQL.
+
+---
+
+# Scheduling
+
+URL: /docs/scheduling
+
+Run code later, repeatedly or off the main thread, with tasks that are cleaned up automatically.
+
+`bloom.scheduler()` returns a `BloomScheduler`. Every task belongs to your plugin and is cancelled by
+`bloom.shutdown()`. If a task throws, the exception is logged with your plugin's name and other tasks keep running.
+
+## Main-thread tasks
+
+Use `sync*` methods for anything that touches players, worlds, entities or inventories.
+
+```java snippet="scheduling.basics"
+```
+
+Delays and periods are in ticks (20 per second) or `Duration`s, which are rounded up to whole ticks. A delay of zero
+means the next tick, as in Bukkit.
+
+## Repeating tasks that stop themselves
+
+Repeating tasks receive their own handle, so they can cancel themselves without a field:
+
+```java snippet="scheduling.countdown"
+```
+
+## Background work
+
+`async*` methods run on background threads. Use them for files, web requests and heavy computation, then come back to
+the main thread before touching the game:
+
+```java snippet="scheduling.async"
+```
+
+<Callout type="warning">
+Never modify worlds, entities or inventories from an async task. Bukkit is not thread-safe, and such bugs show up as
+rare crashes or corrupted chunks, long after the code was written.
+</Callout>
+
+## Thread checks
+
+```java snippet="scheduling.guard"
+```
+
+Bloom's own main-thread APIs (menus, boss bars) perform this check for you.
+
+## Reference
+
+| Method | Runs on | Notes |
+| --- | --- | --- |
+| `sync(Runnable)` | main | next tick |
+| `syncLater(Runnable, ticks or Duration)` | main | |
+| `syncRepeating(Consumer<ScheduledTask>, delay, period)` | main | period at least one tick |
+| `async(Runnable)` / `asyncLater` / `asyncRepeating` | background | |
+| `supplySync(Supplier)` / `supplyAsync(Supplier)` | main / background | returns `CompletableFuture`; cancelled futures fail with `CancellationException` on shutdown |
+| `mainThreadExecutor()` / `asyncExecutor()` | main / background | for `CompletableFuture` chains |
+| `activeTaskCount()` | | tasks not yet finished or cancelled |
+
+Folia is not supported yet, because its region threads do not fit a single main thread.
+
+---
+
+# Storage
+
+URL: /docs/storage
+
+SQLite, MySQL and MariaDB with connection pooling, asynchronous queries, transactions, migrations and repositories.
+
+`bloom-storage` runs SQL on its own threads and hands you `CompletableFuture`s. It does not depend on Bukkit, and it is
+not an ORM: you write SQL, Bloom takes care of connections, threads, parameters and shutdown.
+
+## Opening a database
+
+```java snippet="storage.open"
+```
+
+SQLite uses one connection by default, which serialises writes and avoids "database is locked" errors, plus WAL mode,
+foreign keys and a busy timeout. For MySQL:
+
+```java snippet="storage.mysql"
+```
+
+Bloom picks the JDBC driver the server provides: SQLite and MySQL drivers ship with Spigot and Paper (on 1.8, Bloom
+falls back to the old `com.mysql.jdbc.Driver`). MariaDB's driver must be shaded into your plugin. If the database is
+unreachable, `build()` fails immediately with the address and a hint.
+
+<Callout type="note">
+Use a different `migrationTable` per plugin when several plugins share one MySQL database.
+</Callout>
+
+## Migrations
+
+```java snippet="storage.migrate"
+```
+
+Applied versions are recorded in the history table, and each migration runs in its own transaction. MySQL and
+MariaDB commit schema changes immediately, so keep each migration to one logical change. If the database has a newer
+version than your plugin's migrations, `migrate` fails instead of continuing with an unknown schema.
+
+## Queries
+
+```java snippet="storage.queries"
+```
+
+Results arrive on a database thread. Switch to the main thread with `mainThreadExecutor()` before touching players.
+
+Parameters are bound in order. Besides strings, numbers and booleans you can pass `UUID` (stored as text), enums
+(stored by name), `Instant` (epoch milliseconds), `Duration` (milliseconds), `byte[]` and `null`.
+
+| Method | Returns |
+| --- | --- |
+| `update(sql, params...)` | rows affected |
+| `insert(sql, params...)` | generated key, if any |
+| `batch(sql, rows)` | rows affected per parameter row |
+| `query(sql, mapper, params...)` | all rows |
+| `queryOne(sql, mapper, params...)` | first row, or empty |
+
+## Transactions
+
+```java snippet="storage.transaction"
+```
+
+The transaction commits when the callback returns and rolls back when it throws. Use `inTransaction(tx -> ...)` when
+there is no result. The `Transaction` object is only valid inside the callback.
+
+## Repositories
+
+```java snippet="storage.repository"
+```
+
+`SqlRepository` generates `find`, `findAll`, `save` (an upsert) and `delete`. Table and column names are validated as
+plain identifiers. On SQLite the upsert is `INSERT OR REPLACE`, which works on the old SQLite bundled with 1.8 servers
+but deletes and re-inserts the row, so `ON DELETE CASCADE` children are removed; MySQL uses
+`ON DUPLICATE KEY UPDATE`.
+
+## Blocking calls off the main thread
+
+```java snippet="storage.blocking"
+```
+
+`db.blocking()` throws `IllegalStateException` when called on the main thread, as reported by `mainThreadCheck`.
+
+## Limits and shutdown
+
+- Operations wait in a bounded queue (1,000 by default, `queueCapacity`). When it is full, new operations fail at once
+  with "The database queue is full" instead of piling up memory while the database is down.
+- `close()` stops accepting work, waits for queued operations (10 seconds by default, `shutdownTimeout`), fails
+  anything that could not run, and closes the pool. Register the database as a Bloom service and Bloom does this on
+  shutdown.
+- Error messages include the SQL statement but never parameter values, which may contain personal data.
+
+<Callout type="compat">
+SQLite is tested by Bloom's build on Java 8 and Java 21. Tests against real MySQL 8.4 and MariaDB 11 exist
+(`scripts/test-network-databases.sh`) and need Docker; they have not been run yet.
+</Callout>
+
+---
+
+# Testing
+
+URL: /docs/testing
+
+Unit-test plugin logic without a server, test against MockBukkit, and how Bloom itself is verified.
+
+## Unit tests without a server
+
+Write game logic against `BloomScheduler` and `Clock` instead of Bukkit's scheduler and `System.currentTimeMillis()`,
+then drive time yourself with `bloom-testing`:
+
+```java snippet="testing.countdown"
+```
+
+`ManualScheduler` runs nothing until you call `tick()`. "Async" tasks also run during ticks, on the test thread, so tests
+need no sleeps. It shares the real scheduler's cancellation and error handling. `TestClock` does the same for
+`Cooldowns` and `ExpiringCache`.
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    testImplementation("io.github.crownalonedev.bloom:bloom-testing:0.1.0-SNAPSHOT")
+}
+```
+
+## MockBukkit
+
+For modern Paper behaviour you can test with [MockBukkit](https://mockbukkit.org): Bloom detects it and loads the
+modern adapter. MockBukkit only exists for modern Paper; there is no maintained mock for 1.8.
+
+<Callout type="warning">
+MockBukkit reports features it has not implemented as **skipped** tests, not failures. Check skip counts, or fail the
+build on skips as Bloom's own integration tests do; otherwise untested code looks tested.
+</Callout>
+
+## How Bloom is tested
+
+- Unit tests for every module; the server-independent modules also run on a real Java 8 runtime.
+- MockBukkit integration tests that load the real modern adapter, plus every example plugin's shaded and relocated jar.
+- Compile checks of the modern adapter against Paper 1.21.1, 1.21.11 and 26.3.
+- A real-server harness, `scripts/realserver/run.sh`, which downloads an official Paper or PaperSpigot build, checks
+  its SHA-256, starts it with a self-test plugin and reports the result. Running a server means accepting the
+  Minecraft EULA, so the script only runs when you set `BLOOM_ACCEPT_MINECRAFT_EULA=true` yourself.
+
+---
+
+# Troubleshooting
+
+URL: /docs/troubleshooting
+
+Startup errors, build problems and runtime warnings, with what they mean and how to fix them.
+
+## Bloom does not start
+
+### "cannot run on ... is not supported"
+
+The server version has no adapter. The message lists the supported ranges. Common cases:
+
+- **1.9 to 1.21.0**: not supported. Use 1.8.x or Paper 1.21.1+.
+- **Spigot 1.21+**: run Paper instead; the modern adapter needs Paper's API.
+- **Newer than 26.3.x**: update Bloom, or opt in with `allowNewerUntestedVersions(true)` after testing yourself.
+- **Folia**: not supported yet.
+
+### "needs the Bloom modern adapter, but it is not in the plugin jar"
+
+Add `runtimeOnly("io.github.crownalonedev.bloom:bloom-modern:...")` (or `bloom-legacy`) and make sure the shadow jar
+contains it. If you use `minimize()`, remove it: minimizers cannot see that adapters are loaded by name.
+
+### "Bloom is already running for plugin X"
+
+Either `Bloom.enable` was called twice without `shutdown()`, or two plugins shade Bloom **without relocating** it and
+share its classes. Relocate Bloom in every plugin that embeds it.
+
+### "was compiled for a newer Java version"
+
+The modern adapter needs Java 21. This message on a 1.21+ server means the server runs on an older Java than Paper
+requires.
+
+## Build problems
+
+### "Dependency resolution is looking for a library compatible with JVM runtime version 8"
+
+Your plugin targets Java 8 and depends on `bloom-modern` (Java 21). Add `java { disableAutoTargetJvm() }`. See
+[Installation](/docs/installation#why-disableautotargetjvm).
+
+### My own classes were relocated
+
+A relocation pattern without a trailing dot matches every package that starts with the same text. Use
+`relocate("io.github.crownalonedev.bloom.", ".../libs/bloom.")` with the trailing dots.
+
+### NoSuchMethodError or IncompatibleClassChangeError on one server version
+
+Your own code called a Bukkit method whose signature differs between versions, for example
+`Bukkit.getOnlinePlayers()` (array on 1.7.10) or a method on `InventoryView` (class before 1.21, interface after).
+Use Bloom's adapter (`bloom.adapter().players().onlinePlayers()`), or compile against the oldest API you support.
+
+## Runtime warnings
+
+| Warning | Meaning |
+| --- | --- |
+| `Messenger.actionBar was skipped: action bar messages are not available` | The server lacks the feature; see the unsupported feature policy |
+| `Inventory title ... is longer than 32 characters` | 1.7/1.8 limit; shorten the title |
+| `Another plugin un-cancelled a click in a Bloom menu` | Another plugin interferes with inventory clicks; Bloom re-cancelled it |
+| `Bloom classes were loaded by a different class loader` | Some plugin shades Bloom without relocation |
+| `Database did not finish N queued operation(s)` | Shutdown waited `shutdownTimeout`; those operations were cancelled |
+
+## Debug output
+
+```java
+Bloom.enable(this, BloomOptions.builder().debug(true).build());
+```
+
+Debug mode logs the result of each legacy feature probe and relocation details.
+
+---
+
+# Utilities
+
+URL: /docs/utilities
+
+Cooldowns, human-friendly durations and a small expiring cache.
+
+These live in `bloom-api` and need no server.
+
+## Cooldowns
+
+```java snippet="utilities.cooldowns"
+```
+
+`tryUse` is atomic per key, so two quick clicks cannot both pass. Expired entries are removed when touched and by
+`prune()`; call it from a repeating task if many keys are never touched again. Cooldowns are kept in memory only.
+
+## Durations
+
+```java snippet="utilities.durations"
+```
+
+Units: `ms`, `s`, `m`, `h`, `d`, `w`. A bare number means seconds. Invalid input throws an exception whose message lists
+valid examples, which you can show to the player directly.
+
+## Expiring cache
+
+```java snippet="utilities.cache"
+```
+
+A least-recently-used cache with a time-to-live and a size limit. It uses one lock, so it suits modest caches; for very
+hot paths, use a dedicated caching library.
+
+## Ticks
+
+`Ticks.from(Duration)` rounds up to whole ticks, so a positive duration never becomes zero. `Ticks.toDuration(long)`
+and `Ticks.seconds(long)` convert the other way.

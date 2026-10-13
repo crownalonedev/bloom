@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+out/
+
+# Local caches (server jars are downloaded, never committed)
+.cache/
+
+# Website
+website/node_modules/
+website/dist/
+website/.wrangler/
+website/.dev.vars
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+*.pem

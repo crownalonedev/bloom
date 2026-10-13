@@ -1,0 +1,81 @@
+---
+title: Messaging
+description: Chat, action bars, titles and boss bars with placeholders, MiniMessage and legacy colour codes on every version.
+---
+
+`bloom.messages()` returns a `Messenger`. Messengers are immutable: `withPrefix`, `withFormat` and
+`withUnsupportedPolicy` return new ones, so keep the variants you use as fields.
+
+## Sending messages
+
+```java snippet="messaging.send"
+```
+
+`send` adds the messenger's prefix; action bars, titles and boss bars never get the prefix. `broadcast` sends to every
+online player and the console.
+
+## Placeholders
+
+Write `{name}` in a template and pass `Placeholder.of("name", value)`. Substitution happens in one pass, so a value
+that itself contains `{other}` is not expanded again. Unknown placeholders are left as they are.
+
+Placeholder values are **plain text by default**: colour codes or MiniMessage tags inside them are neutralised. That
+makes it safe to insert player names and chat. Use `Placeholder.formatted` only for text you trust.
+
+```java snippet="messaging.escaping"
+```
+
+## Formats
+
+Bloom supports two markup formats on every server. The default is `TextFormat.LEGACY`; change it for the whole plugin
+with `BloomOptions.textFormat(...)` or per messenger with `withFormat`.
+
+| | `LEGACY` | `MINIMESSAGE` |
+| --- | --- | --- |
+| Example | `&dHello &lworld` | `<light_purple>Hello <bold>world` |
+| Paper 1.21+ / 26.x | Converted with Adventure, `&#RRGGBB` hex supported | Real MiniMessage |
+| 1.7 / 1.8 | Native | Converted by Bloom (see below) |
+
+```java snippet="messaging.minimessage"
+```
+
+<Callout type="compat" title="MiniMessage on 1.7 and 1.8">
+Bloom converts a documented subset to legacy colours: named colours, `<color:...>`, hex colours (mapped to the
+nearest of the 16 legacy colours, keeping saturated colours chromatic), all decorations and their negation, closing
+tags, `<reset>`, `<newline>`, `<pre>` and `\<` escapes. Gradients and transitions use their first colour. Click, hover,
+insertion, font and shadow tags keep their text but lose their effect. Unknown tags are printed literally, as
+MiniMessage does.
+</Callout>
+
+## Action bars and titles
+
+```java snippet="messaging.titles"
+```
+
+Title timings need the `TITLE_TIMINGS` capability; on 1.8 the client's default timings are used.
+
+## Boss bars
+
+Boss bars exist only on modern Paper (`BOSS_BAR`). They must be created and changed on the main thread, and Bloom
+hides them from all viewers on shutdown.
+
+```java snippet="messaging.bossbar"
+```
+
+## Unsupported features
+
+When a server lacks a feature, the messenger's `UnsupportedFeaturePolicy` decides what happens:
+
+| Policy | Effect |
+| --- | --- |
+| `SKIP` (default) | Nothing is sent; the method returns `false`; one warning per feature is logged |
+| `FALLBACK_TO_CHAT` | Action bars and titles are sent as chat messages; boss bars are skipped |
+| `THROW` | `UnsupportedCapabilityException` naming the capability and the platform |
+
+```java snippet="messaging.policy"
+```
+
+## Threads
+
+Chat, action bars and titles can be sent from any thread. Boss bars are main-thread only. For strings that must be
+plain legacy text (scoreboards, signs), use `messenger.legacy(template, placeholders...)`.

@@ -1,0 +1,655 @@
+[
+  {
+    "slug": "ai-integration",
+    "title": "AI integration",
+    "description": "Machine-readable API data, llms.txt, and the Bloom skill for Claude Code, Codex and OpenCode.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "What is available",
+        "anchor": "what-is-available"
+      },
+      {
+        "depth": 2,
+        "text": "Using the skill",
+        "anchor": "using-the-skill"
+      },
+      {
+        "depth": 2,
+        "text": "Asking good questions",
+        "anchor": "asking-good-questions"
+      }
+    ]
+  },
+  {
+    "slug": "architecture",
+    "title": "Architecture",
+    "description": "How Bloom is split into modules, how it picks a version adapter, and the rules that keep one jar working everywhere.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Layers",
+        "anchor": "layers"
+      },
+      {
+        "depth": 2,
+        "text": "Startup",
+        "anchor": "startup"
+      },
+      {
+        "depth": 2,
+        "text": "Shutdown",
+        "anchor": "shutdown"
+      },
+      {
+        "depth": 2,
+        "text": "One jar, many APIs",
+        "anchor": "one-jar-many-apis"
+      },
+      {
+        "depth": 2,
+        "text": "Threads",
+        "anchor": "threads"
+      },
+      {
+        "depth": 2,
+        "text": "Identifying items",
+        "anchor": "identifying-items"
+      }
+    ]
+  },
+  {
+    "slug": "compatibility",
+    "title": "Compatibility",
+    "description": "Supported Minecraft versions, Java requirements, capabilities per version, and what has actually been tested.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Versions",
+        "anchor": "versions"
+      },
+      {
+        "depth": 2,
+        "text": "Capabilities",
+        "anchor": "capabilities"
+      },
+      {
+        "depth": 2,
+        "text": "What happens when a feature is missing",
+        "anchor": "what-happens-when-a-feature-is-missing"
+      },
+      {
+        "depth": 2,
+        "text": "Java",
+        "anchor": "java"
+      },
+      {
+        "depth": 2,
+        "text": "Newer Paper versions",
+        "anchor": "newer-paper-versions"
+      },
+      {
+        "depth": 2,
+        "text": "Not supported",
+        "anchor": "not-supported"
+      }
+    ]
+  },
+  {
+    "slug": "configuration",
+    "title": "Configuration",
+    "description": "YAML files with bundled defaults, typed getters, object mapping, validation, migrations and saves that keep comments.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Loading a file",
+        "anchor": "loading-a-file"
+      },
+      {
+        "depth": 2,
+        "text": "Reading values",
+        "anchor": "reading-values"
+      },
+      {
+        "depth": 2,
+        "text": "Mapping to classes",
+        "anchor": "mapping-to-classes"
+      },
+      {
+        "depth": 2,
+        "text": "Validation",
+        "anchor": "validation"
+      },
+      {
+        "depth": 2,
+        "text": "Migrations",
+        "anchor": "migrations"
+      },
+      {
+        "depth": 2,
+        "text": "Reloading",
+        "anchor": "reloading"
+      },
+      {
+        "depth": 2,
+        "text": "Saving",
+        "anchor": "saving"
+      },
+      {
+        "depth": 2,
+        "text": "New settings in updates",
+        "anchor": "new-settings-in-updates"
+      },
+      {
+        "depth": 2,
+        "text": "Custom types",
+        "anchor": "custom-types"
+      },
+      {
+        "depth": 2,
+        "text": "Safety",
+        "anchor": "safety"
+      }
+    ]
+  },
+  {
+    "slug": "distribution",
+    "title": "Distribution",
+    "description": "Embedding Bloom in your plugin today, the planned standalone runtime, and licensing for closed-source plugins.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Embedded (supported)",
+        "anchor": "embedded-supported"
+      },
+      {
+        "depth": 2,
+        "text": "Standalone runtime (planned)",
+        "anchor": "standalone-runtime-planned"
+      },
+      {
+        "depth": 2,
+        "text": "Licensing",
+        "anchor": "licensing"
+      }
+    ]
+  },
+  {
+    "slug": "events",
+    "title": "Events",
+    "description": "Subscribe to Bukkit events with lambdas, filters and limits, and have them removed automatically on shutdown.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Lambda subscriptions",
+        "anchor": "lambda-subscriptions"
+      },
+      {
+        "depth": 2,
+        "text": "Priority, filters and limits",
+        "anchor": "priority-filters-and-limits"
+      },
+      {
+        "depth": 2,
+        "text": "Classic listeners",
+        "anchor": "classic-listeners"
+      },
+      {
+        "depth": 2,
+        "text": "Threads and errors",
+        "anchor": "threads-and-errors"
+      }
+    ]
+  },
+  {
+    "slug": "gui",
+    "title": "Menus",
+    "description": "Inventory menus with buttons, layouts, pagination, back navigation, per-player state and confirmation dialogs.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "A first menu",
+        "anchor": "a-first-menu"
+      },
+      {
+        "depth": 2,
+        "text": "Layouts",
+        "anchor": "layouts"
+      },
+      {
+        "depth": 2,
+        "text": "Buttons",
+        "anchor": "buttons"
+      },
+      {
+        "depth": 2,
+        "text": "Clicks",
+        "anchor": "clicks"
+      },
+      {
+        "depth": 2,
+        "text": "Per-player state and refreshing",
+        "anchor": "per-player-state-and-refreshing"
+      },
+      {
+        "depth": 2,
+        "text": "Pagination",
+        "anchor": "pagination"
+      },
+      {
+        "depth": 2,
+        "text": "Navigation and history",
+        "anchor": "navigation-and-history"
+      },
+      {
+        "depth": 2,
+        "text": "Confirmation dialogs",
+        "anchor": "confirmation-dialogs"
+      },
+      {
+        "depth": 2,
+        "text": "Templates",
+        "anchor": "templates"
+      },
+      {
+        "depth": 2,
+        "text": "Safety",
+        "anchor": "safety"
+      }
+    ]
+  },
+  {
+    "slug": "installation",
+    "title": "Installation",
+    "description": "Add Bloom to a Gradle plugin project for legacy, modern or cross-version servers, and shade it correctly.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Choose your target",
+        "anchor": "choose-your-target"
+      },
+      {
+        "depth": 2,
+        "text": "Pick modules",
+        "anchor": "pick-modules"
+      },
+      {
+        "depth": 2,
+        "text": "Relocate Bloom",
+        "anchor": "relocate-bloom"
+      },
+      {
+        "depth": 2,
+        "text": "Why disableAutoTargetJvm",
+        "anchor": "why-disableautotargetjvm"
+      },
+      {
+        "depth": 2,
+        "text": "plugin.yml",
+        "anchor": "pluginyml"
+      },
+      {
+        "depth": 2,
+        "text": "Your first class",
+        "anchor": "your-first-class"
+      },
+      {
+        "depth": 2,
+        "text": "Standalone runtime (planned)",
+        "anchor": "standalone-runtime-planned"
+      }
+    ]
+  },
+  {
+    "slug": "introduction",
+    "title": "Introduction",
+    "description": "What Bloom is, which servers it runs on, and how these docs are organised.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "What you get",
+        "anchor": "what-you-get"
+      },
+      {
+        "depth": 2,
+        "text": "How Bloom thinks about versions",
+        "anchor": "how-bloom-thinks-about-versions"
+      },
+      {
+        "depth": 2,
+        "text": "Where to go next",
+        "anchor": "where-to-go-next"
+      }
+    ]
+  },
+  {
+    "slug": "items",
+    "title": "Items",
+    "description": "Build items with modern material names on every version, identify custom items reliably and store item data.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Building items",
+        "anchor": "building-items"
+      },
+      {
+        "depth": 2,
+        "text": "Material names",
+        "anchor": "material-names"
+      },
+      {
+        "depth": 2,
+        "text": "Custom items",
+        "anchor": "custom-items"
+      },
+      {
+        "depth": 2,
+        "text": "Item data",
+        "anchor": "item-data"
+      },
+      {
+        "depth": 2,
+        "text": "Serialization",
+        "anchor": "serialization"
+      },
+      {
+        "depth": 2,
+        "text": "Version-specific features",
+        "anchor": "version-specific-features"
+      }
+    ]
+  },
+  {
+    "slug": "messaging",
+    "title": "Messaging",
+    "description": "Chat, action bars, titles and boss bars with placeholders, MiniMessage and legacy colour codes on every version.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Sending messages",
+        "anchor": "sending-messages"
+      },
+      {
+        "depth": 2,
+        "text": "Placeholders",
+        "anchor": "placeholders"
+      },
+      {
+        "depth": 2,
+        "text": "Formats",
+        "anchor": "formats"
+      },
+      {
+        "depth": 2,
+        "text": "Action bars and titles",
+        "anchor": "action-bars-and-titles"
+      },
+      {
+        "depth": 2,
+        "text": "Boss bars",
+        "anchor": "boss-bars"
+      },
+      {
+        "depth": 2,
+        "text": "Unsupported features",
+        "anchor": "unsupported-features"
+      },
+      {
+        "depth": 2,
+        "text": "Threads",
+        "anchor": "threads"
+      }
+    ]
+  },
+  {
+    "slug": "migration",
+    "title": "Migration guides",
+    "description": "Moving an existing Bukkit plugin to Bloom, and upgrading between Bloom versions.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "From plain Bukkit code",
+        "anchor": "from-plain-bukkit-code"
+      },
+      {
+        "depth": 2,
+        "text": "Between Bloom versions",
+        "anchor": "between-bloom-versions"
+      }
+    ]
+  },
+  {
+    "slug": "modules",
+    "title": "Modules",
+    "description": "Every Bloom artifact, what it contains, what it depends on and when to add it.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Adapters are runtime-only",
+        "anchor": "adapters-are-runtime-only"
+      },
+      {
+        "depth": 2,
+        "text": "Third-party libraries",
+        "anchor": "third-party-libraries"
+      },
+      {
+        "depth": 2,
+        "text": "Logging",
+        "anchor": "logging"
+      }
+    ]
+  },
+  {
+    "slug": "quickstart",
+    "title": "Quickstart",
+    "description": "Build a small shop plugin with a menu, items and messages that runs on 1.8 and on Paper 26.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "1. Enable Bloom",
+        "anchor": "1-enable-bloom"
+      },
+      {
+        "depth": 2,
+        "text": "2. Build an item and a menu",
+        "anchor": "2-build-an-item-and-a-menu"
+      },
+      {
+        "depth": 2,
+        "text": "3. Build and run",
+        "anchor": "3-build-and-run"
+      },
+      {
+        "depth": 2,
+        "text": "Next steps",
+        "anchor": "next-steps"
+      }
+    ]
+  },
+  {
+    "slug": "scheduling",
+    "title": "Scheduling",
+    "description": "Run code later, repeatedly or off the main thread, with tasks that are cleaned up automatically.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Main-thread tasks",
+        "anchor": "main-thread-tasks"
+      },
+      {
+        "depth": 2,
+        "text": "Repeating tasks that stop themselves",
+        "anchor": "repeating-tasks-that-stop-themselves"
+      },
+      {
+        "depth": 2,
+        "text": "Background work",
+        "anchor": "background-work"
+      },
+      {
+        "depth": 2,
+        "text": "Thread checks",
+        "anchor": "thread-checks"
+      },
+      {
+        "depth": 2,
+        "text": "Reference",
+        "anchor": "reference"
+      }
+    ]
+  },
+  {
+    "slug": "storage",
+    "title": "Storage",
+    "description": "SQLite, MySQL and MariaDB with connection pooling, asynchronous queries, transactions, migrations and repositories.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Opening a database",
+        "anchor": "opening-a-database"
+      },
+      {
+        "depth": 2,
+        "text": "Migrations",
+        "anchor": "migrations"
+      },
+      {
+        "depth": 2,
+        "text": "Queries",
+        "anchor": "queries"
+      },
+      {
+        "depth": 2,
+        "text": "Transactions",
+        "anchor": "transactions"
+      },
+      {
+        "depth": 2,
+        "text": "Repositories",
+        "anchor": "repositories"
+      },
+      {
+        "depth": 2,
+        "text": "Blocking calls off the main thread",
+        "anchor": "blocking-calls-off-the-main-thread"
+      },
+      {
+        "depth": 2,
+        "text": "Limits and shutdown",
+        "anchor": "limits-and-shutdown"
+      }
+    ]
+  },
+  {
+    "slug": "testing",
+    "title": "Testing",
+    "description": "Unit-test plugin logic without a server, test against MockBukkit, and how Bloom itself is verified.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Unit tests without a server",
+        "anchor": "unit-tests-without-a-server"
+      },
+      {
+        "depth": 2,
+        "text": "MockBukkit",
+        "anchor": "mockbukkit"
+      },
+      {
+        "depth": 2,
+        "text": "How Bloom is tested",
+        "anchor": "how-bloom-is-tested"
+      }
+    ]
+  },
+  {
+    "slug": "troubleshooting",
+    "title": "Troubleshooting",
+    "description": "Startup errors, build problems and runtime warnings, with what they mean and how to fix them.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Bloom does not start",
+        "anchor": "bloom-does-not-start"
+      },
+      {
+        "depth": 3,
+        "text": "\"cannot run on ... is not supported\"",
+        "anchor": "cannot-run-on--is-not-supported"
+      },
+      {
+        "depth": 3,
+        "text": "\"needs the Bloom modern adapter, but it is not in the plugin jar\"",
+        "anchor": "needs-the-bloom-modern-adapter-but-it-is-not-in-the-plugin-jar"
+      },
+      {
+        "depth": 3,
+        "text": "\"Bloom is already running for plugin X\"",
+        "anchor": "bloom-is-already-running-for-plugin-x"
+      },
+      {
+        "depth": 3,
+        "text": "\"was compiled for a newer Java version\"",
+        "anchor": "was-compiled-for-a-newer-java-version"
+      },
+      {
+        "depth": 2,
+        "text": "Build problems",
+        "anchor": "build-problems"
+      },
+      {
+        "depth": 3,
+        "text": "\"Dependency resolution is looking for a library compatible with JVM runtime version 8\"",
+        "anchor": "dependency-resolution-is-looking-for-a-library-compatible-with-jvm-runtime-version-8"
+      },
+      {
+        "depth": 3,
+        "text": "My own classes were relocated",
+        "anchor": "my-own-classes-were-relocated"
+      },
+      {
+        "depth": 3,
+        "text": "NoSuchMethodError or IncompatibleClassChangeError on one server version",
+        "anchor": "nosuchmethoderror-or-incompatibleclasschangeerror-on-one-server-version"
+      },
+      {
+        "depth": 2,
+        "text": "Runtime warnings",
+        "anchor": "runtime-warnings"
+      },
+      {
+        "depth": 2,
+        "text": "Debug output",
+        "anchor": "debug-output"
+      }
+    ]
+  },
+  {
+    "slug": "utilities",
+    "title": "Utilities",
+    "description": "Cooldowns, human-friendly durations and a small expiring cache.",
+    "toc": [
+      {
+        "depth": 2,
+        "text": "Cooldowns",
+        "anchor": "cooldowns"
+      },
+      {
+        "depth": 2,
+        "text": "Durations",
+        "anchor": "durations"
+      },
+      {
+        "depth": 2,
+        "text": "Expiring cache",
+        "anchor": "expiring-cache"
+      },
+      {
+        "depth": 2,
+        "text": "Ticks",
+        "anchor": "ticks"
+      }
+    ]
+  }
+]

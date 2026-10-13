@@ -1,0 +1,8 @@
+name: BloomExampleItems
+version: '${version}'
+main: io.github.crownalonedev.bloomexamples.items.ItemsExamplePlugin
+api-version: '1.21'
+description: Bloom example - custom items with persistent identity.
+commands:
+  bloomitems:
+    description: Receive the example custom items.

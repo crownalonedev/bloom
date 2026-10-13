@@ -1,0 +1,36 @@
+---
+title: Events
+description: Subscribe to Bukkit events with lambdas, filters and limits, and have them removed automatically on shutdown.
+---
+
+`bloom.events()` registers listeners that belong to your plugin and are removed by `bloom.shutdown()`. You can still
+use ordinary `@EventHandler` listeners alongside it.
+
+## Lambda subscriptions
+
+```java snippet="events.subscribe"
+```
+
+The handler runs at `NORMAL` priority and also receives cancelled events. Subscribe to concrete events such as
+`PlayerJoinEvent`; abstract ones such as `PlayerEvent` have no handler list and are rejected with an explanation.
+
+## Priority, filters and limits
+
+```java snippet="events.builder"
+```
+
+- `priority(...)` takes Bukkit's `EventPriority`.
+- `ignoreCancelled()` skips events another listener already cancelled.
+- `filter(...)` can be called several times; all filters must pass.
+- `limit(n)` unsubscribes after `n` handled events, which suits one-off reactions.
+
+## Classic listeners
+
+```java snippet="events.listener"
+```
+
+## Threads and errors
+
+Handlers run on the thread that fires the event: the main thread for most events, a background thread for
+asynchronous events such as `AsyncPlayerPreLoginEvent`. Exceptions are reported by the server with your plugin's
+name, exactly like exceptions from `@EventHandler` methods.

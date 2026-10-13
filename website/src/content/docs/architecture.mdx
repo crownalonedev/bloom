@@ -1,0 +1,82 @@
+---
+title: Architecture
+description: How Bloom is split into modules, how it picks a version adapter, and the rules that keep one jar working everywhere.
+---
+
+## Layers
+
+```text
+your plugin
+   │  uses
+   ▼
+bloom-gui ── bloom-items ── bloom-bukkit ─────── bloom-api   (stable contracts, Java 8, no dependencies)
+                               │                    ▲
+                               │ loads by name       │
+                     ┌─────────┴──────────┐   bloom-config, bloom-storage, bloom-testing
+                     ▼                    ▼
+               bloom-legacy          bloom-modern
+            (1.7.10 – 1.8.9)    (Paper 1.21.1 – 26.3.x)
+```
+
+- **bloom-api** holds the contracts: platform model, capabilities, scheduler interfaces, text types and utilities.
+  It has no dependencies.
+- **bloom-bukkit** is the runtime for Bukkit-family servers: `Bloom`, detection, the adapter interfaces, the
+  scheduler, messages and events.
+- **Feature modules** (`bloom-items`, `bloom-gui`) build on it. `bloom-config` and `bloom-storage` do not depend on
+  Bukkit at all.
+- **Adapters** contain every piece of version-specific code.
+
+## Startup
+
+When you call `Bloom.enable(this)`:
+
+1. **Detect.** Bloom reads the server name and version strings and probes a few classes to tell CraftBukkit,
+   Spigot, PaperSpigot, Paper, Paper forks and Folia apart.
+2. **Decide.** A single policy class decides whether this server is supported and which adapter family serves it.
+   If not supported, Bloom throws `BloomStartupException` with the reason and what to do.
+3. **Load.** Bloom loads the chosen adapter class by name. The name is derived from Bloom's own runtime package, so
+   it still works after you relocate Bloom. The other adapter is never touched, which matters because the modern
+   adapter is Java 21 bytecode and cannot even be loaded on Java 8.
+4. **Probe.** The adapter checks optional features. On 1.8 that includes reflection-based action bars and item NBT.
+   The result is the set of **capabilities**.
+5. **Start services.** Scheduler, events and messages start, and Bloom logs one banner line with the version,
+   platform, adapter and capabilities.
+
+## Shutdown
+
+`bloom.shutdown()` closes everything in reverse order of creation: feature services first (open menus close,
+databases finish queued work), then event subscriptions, then scheduled tasks, then the adapter. Errors while closing
+are logged and do not stop the rest.
+
+<Callout type="note">
+Bloom does not shut itself down on `PluginDisableEvent`, because Bukkit fires that event before your `onDisable`
+runs, and you may still need Bloom there to save data. Call `bloom.shutdown()` at the end of `onDisable`.
+</Callout>
+
+## One jar, many APIs
+
+Shared code is compiled once against spigot-api 1.8.8 and may only use Bukkit members whose binary shape is the same
+on every supported server. These differences are handled by adapters instead:
+
+| Difference | Where it bites |
+| --- | --- |
+| `Bukkit.getOnlinePlayers()` returns an array on 1.7.10, a collection later | 1.7.10 |
+| `InventoryView` is a class before 1.21 and an interface after | 1.21+ |
+| `ItemMeta.spigot()` does not exist on modern Paper | 1.21+ |
+| `ItemFlag` does not exist on 1.7.10 | 1.7.10 |
+| Materials were renamed and data values removed in 1.13 | everywhere |
+| Inventory titles longer than 32 characters throw | 1.7, 1.8 |
+
+## Threads
+
+- Players, worlds and inventories are touched only on the main thread. APIs that need it check and throw with an
+  explanation, for example `Menus.open` and `MenuView.refresh`.
+- Storage runs on its own bounded pool; results come back as `CompletableFuture`s you move to the main thread with
+  `scheduler().mainThreadExecutor()`.
+- Navigation from inside menu click handlers is deferred to the next tick.
+
+## Identifying items
+
+Custom items are recognised by a namespaced value in the item's persistent data, never by name or lore:
+`PersistentDataContainer` on Paper, an NBT compound named `BloomData` on 1.7 and 1.8. Values written on one family are
+not readable on the other; servers do not switch families, so Bloom does not bridge them.

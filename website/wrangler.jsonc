@@ -1,0 +1,14 @@
+// Cloudflare Workers static assets: the site is fully prerendered, so no Worker script is needed.
+// Deploying requires the owner's Cloudflare account (`npx wrangler login`, then `npm run deploy`).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bloom-website",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist/client",
+    // /docs/quickstart is served from docs/quickstart.html without a redirect.
+    "html_handling": "auto-trailing-slash",
+    // Unknown paths get dist/client/404.html with a 404 status.
+    "not_found_handling": "404-page"
+  }
+}

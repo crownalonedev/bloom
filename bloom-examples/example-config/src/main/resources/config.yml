@@ -1,0 +1,16 @@
+# Bloom config example
+# Bloom never overwrites this file except to migrate it (a .bak copy is made first).
+config-version: 2
+
+messages:
+  # Prefix for chat messages. Supports & colour codes.
+  prefix: '&d&lHomes &8» '
+
+homes:
+  # Maximum homes per player (1-100).
+  max-homes: 3
+  # Delay before teleporting, e.g. 3s, 1m30s.
+  teleport-delay: 3s
+  # Worlds where /home is disabled.
+  disabled-worlds:
+    - world_the_end

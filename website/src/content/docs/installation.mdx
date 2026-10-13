@@ -1,0 +1,133 @@
+---
+title: Installation
+description: Add Bloom to a Gradle plugin project for legacy, modern or cross-version servers, and shade it correctly.
+---
+
+Bloom is a library you **embed** in your plugin: its classes are shaded into your jar and relocated into your own
+package. Nothing is installed on the server.
+
+<Callout type="warning" title="Not on a public repository yet">
+Bloom has not been released to Maven Central or GitHub Packages. Until it is, build it from source and publish it
+to your local Maven repository:
+
+```bash
+git clone https://github.com/crownalonedev/bloom.git
+cd bloom
+./gradlew publishToMavenLocal
+```
+
+Then add `mavenLocal()` to your plugin's repositories.
+</Callout>
+
+## Choose your target
+
+Bloom's modules are Java 8 bytecode except `bloom-modern`, which is Java 21. What you compile against decides which
+servers your jar can run on.
+
+<Tabs>
+<Tab label="Cross-version (1.7.10 to 26.x)">
+
+Compile against **spigot-api 1.8.8** as Java 8 bytecode and include **both adapters**. This is the setup the examples
+use. It is verified by building the standalone template in `bloom-examples/template`:
+
+```kotlin snippet="install.gradle-cross" title="build.gradle.kts"
+```
+
+</Tab>
+<Tab label="Legacy only (1.7.10 to 1.8.9)">
+
+The same as cross-version, without `bloom-modern` and without `disableAutoTargetJvm()`:
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
+    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.crownalonedev.bloom:bloom-legacy:0.1.0-SNAPSHOT")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release = 8
+}
+```
+
+</Tab>
+<Tab label="Modern only (Paper 1.21.1 to 26.x)">
+
+Compile against **paper-api** with Java 21 and include only `bloom-modern`. You can then use Paper APIs directly in
+your own code:
+
+```kotlin title="build.gradle.kts"
+repositories {
+    maven("https://repo.papermc.io/repository/maven-public/")
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.crownalonedev.bloom:bloom-modern:0.1.0-SNAPSHOT")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release = 21
+}
+```
+
+</Tab>
+</Tabs>
+
+## Pick modules
+
+Depend only on what you use; feature modules bring the core with them.
+
+| You need | Add |
+| --- | --- |
+| Messages, scheduler, events | `bloom-bukkit` |
+| Items | `bloom-items` |
+| Menus (includes items) | `bloom-gui` |
+| YAML configuration | `bloom-config` |
+| SQL storage | `bloom-storage` |
+| Unit-test helpers | `bloom-testing` (test scope) |
+
+## Relocate Bloom
+
+Every plugin that embeds Bloom must relocate it, so two plugins with different Bloom versions never share classes.
+Patterns must end with a dot, otherwise `io.github.crownalonedev.bloom` would also match your own package if it
+happens to start the same way.
+
+```kotlin title="build.gradle.kts"
+tasks.shadowJar {
+    relocate("io.github.crownalonedev.bloom.", "com.example.myplugin.libs.bloom.")
+    relocate("org.yaml.snakeyaml.", "com.example.myplugin.libs.snakeyaml.") // with bloom-config
+    relocate("com.zaxxer.hikari.", "com.example.myplugin.libs.hikari.")     // with bloom-storage
+    relocate("org.slf4j.", "com.example.myplugin.libs.slf4j.")              // with bloom-storage
+}
+```
+
+<Callout type="warning" title="Do not minimize">
+Do not call `minimize()` on the shadow jar. Bloom loads its adapters by name at runtime, so a minimizer cannot see
+that they are used and removes them. Bloom then fails to start with "the Bloom modern adapter is missing".
+</Callout>
+
+## Why disableAutoTargetJvm
+
+Gradle refuses to add a Java 21 library to a Java 8 project by default. Cross-version plugins need
+`java { disableAutoTargetJvm() }` because `bloom-modern` is Java 21 bytecode. This is safe: Bloom loads that adapter
+only on Paper servers, which require Java 21 or newer.
+
+## plugin.yml
+
+```yaml snippet="install.pluginyml" title="src/main/resources/plugin.yml"
+```
+
+## Your first class
+
+```java snippet="install.plugin" title="MyPlugin.java"
+```
+
+Build with `./gradlew shadowJar` and copy `build/libs/<name>.jar` into the server's `plugins` folder. The console
+shows a line like `Bloom 0.1.0-SNAPSHOT · Paper 1.21.11 (Java 21.0.5) · adapter: modern`.
+
+## Standalone runtime (planned)
+
+A shared Bloom runtime plugin that other plugins depend on is planned but not available. Embedding, as described
+above, is the only supported distribution today. See [Distribution](/docs/distribution).

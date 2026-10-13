@@ -1,0 +1,46 @@
+---
+title: Quickstart
+description: Build a small shop plugin with a menu, items and messages that runs on 1.8 and on Paper 26.
+---
+
+This walk-through builds the plugin from the homepage: a shop menu that feeds the player, opened when they join.
+It assumes you completed [Installation](/docs/installation) with `bloom-gui` and both adapters.
+
+## 1. Enable Bloom
+
+`Bloom.enable(this)` detects the server, picks the adapter and starts Bloom's services. `bloom.shutdown()` stops
+everything Bloom started for your plugin, in order. Always pair them.
+
+```java snippet="install.plugin" title="MyPlugin.java"
+```
+
+## 2. Build an item and a menu
+
+Items use **modern material names** on every server. On 1.8, `COOKED_BEEF` stays the same and names that changed in
+1.13, such as `LIME_WOOL`, are mapped to their legacy material and data value automatically.
+
+```java snippet="home.plugin" title="ShopPlugin.java"
+```
+
+A few things happen for you here:
+
+- The menu cancels every click and drag, so the item can never be taken out.
+- `click.close()` waits until the next tick, which is the safe moment to close an inventory.
+- `actionBar` shows an action bar on servers that have one and is skipped, with one console warning, on 1.7.10.
+- The join listener and the delayed task are removed when the plugin disables.
+
+## 3. Build and run
+
+```bash
+./gradlew shadowJar
+```
+
+Put the jar from `build/libs` into a test server's `plugins` folder and join. The startup log tells you which
+adapter Bloom chose and which capabilities the server has.
+
+## Next steps
+
+- [Menus](/docs/gui): layouts, pagination and navigation.
+- [Items](/docs/items): custom items that survive renames and server restarts.
+- [Configuration](/docs/configuration): let server owners change prices and titles.
+- [Storage](/docs/storage): keep player data in SQLite or MySQL.

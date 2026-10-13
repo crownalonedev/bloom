@@ -1,0 +1,222 @@
+{
+  "config.load": {
+    "code": "YamlConfig config = YamlConfig.builder(plugin.getDataFolder().toPath().resolve(\"config.yml\"))\n        .defaults(() -> plugin.getResource(\"config.yml\")) // bundled in src/main/resources\n        .logger(plugin.getLogger())\n        .build(); // creates the file from defaults if missing, then loads it",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L24-L27"
+  },
+  "config.getters": {
+    "code": "String prefix = config.getString(\"messages.prefix\"); // required: throws if missing everywhere\nint maxHomes = config.getInt(\"homes.max\", 3); // with a fallback\nDuration delay = config.getDuration(\"homes.teleport-delay\"); // \"3s\", \"1m30s\" or a number of seconds\nList<String> worlds = config.getStringList(\"homes.disabled-worlds\");\nConfigSection kits = config.section(\"kits\");\nfor (String kit : kits.keys()) {\n    int cost = kits.getInt(kit + \".cost\", 0);\n    // ...\n    Integer.valueOf(cost).hashCode();\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L34-L43"
+  },
+  "config.pojo": {
+    "code": "static final class HomeSettings {\n    int maxHomes = 3; // key \"max-homes\"; the value here is the default when the key is missing\n    Duration teleportDelay = Duration.ofSeconds(3);\n    List<String> disabledWorlds = new ArrayList<String>();\n\n    @ConfigKey(\"allow-in-combat\")\n    boolean combat = false;\n}\n\nstatic HomeSettings homes(YamlConfig config) {\n    return config.get(\"homes\", HomeSettings.class);\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L52-L63"
+  },
+  "config.validate": {
+    "code": "config.validate()\n        .require(\"storage.type\")\n        .oneOf(\"storage.type\", \"sqlite\", \"mysql\", \"mariadb\")\n        .range(\"homes.max-homes\", 1, 100)\n        .type(\"homes.teleport-delay\", Duration.class)\n        .check(); // throws ConfigException listing every problem with its line number",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L68-L73"
+  },
+  "config.migrate": {
+    "code": "return YamlConfig.builder(plugin.getDataFolder().toPath().resolve(\"config.yml\"))\n        .defaults(() -> plugin.getResource(\"config.yml\"))\n        .version(3) // files without \"config-version\" count as version 1\n        .migration(1, m -> m.move(\"prefix\", \"messages.prefix\")) // 1 -> 2\n        .migration(2, m -> m.set(\"storage.type\", m.has(\"mysql\") ? \"mysql\" : \"sqlite\")) // 2 -> 3\n        .logger(plugin.getLogger())\n        .build(); // old files are backed up as config.yml.v1.<timestamp>.bak before migrating",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L79-L85"
+  },
+  "config.reload": {
+    "code": "try {\n    config.reload();\n    sender.sendMessage(\"Reloaded.\");\n} catch (ConfigException e) {\n    sender.sendMessage(\"Reload failed, keeping the previous settings: \" + e.getMessage());\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L91-L96"
+  },
+  "config.save": {
+    "code": "config.set(\"homes.max-homes\", 5);\nconfig.set(\"spawn.world\", \"world\");\nconfig.save(); // atomic write; comments and untouched values keep their formatting",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L102-L104"
+  },
+  "config.serializer": {
+    "code": "TypeSerializer<Location> locations = new TypeSerializer<Location>() {\n    @Override\n    public Location deserialize(Object raw) {\n        String[] p = raw.toString().split(\",\");\n        World world = Bukkit.getWorld(p[0]);\n        if (world == null) {\n            throw new IllegalArgumentException(\"unknown world '\" + p[0] + \"'\");\n        }\n        return new Location(\n                world, Double.parseDouble(p[1]), Double.parseDouble(p[2]), Double.parseDouble(p[3]));\n    }\n\n    @Override\n    public Object serialize(Location value) {\n        return value.getWorld().getName() + \",\" + value.getX() + \",\" + value.getY() + \",\" + value.getZ();\n    }\n};\nYamlConfig config = YamlConfig.builder(plugin.getDataFolder().toPath().resolve(\"spawns.yml\"))\n        .serializer(Location.class, locations)\n        .build();\nLocation spawn = config.get(\"spawn\", Location.class);",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ConfigSnippets.java#L110-L130"
+  },
+  "core.options": {
+    "code": "bloom = Bloom.enable(\n        this,\n        BloomOptions.builder()\n                .textFormat(\n                        TextFormat.MINIMESSAGE) // default format for messages, item names and menu titles\n                .unsupportedFeaturePolicy(UnsupportedFeaturePolicy.FALLBACK_TO_CHAT)\n                .debug(false)\n                .build());",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/CoreSnippets.java#L23-L30"
+  },
+  "core.graceful": {
+    "code": "@Override\npublic void onEnable() {\n    try {\n        bloom = Bloom.enable(this);\n    } catch (BloomStartupException e) {\n        // The message names the server, the reason and the fix; Bloom has already logged it.\n        getServer().getPluginManager().disablePlugin(this);\n        return;\n    }\n    // ... the rest of your startup\n}\n\n@Override\npublic void onDisable() {\n    if (bloom != null) {\n        bloom.shutdown();\n    }\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/CoreSnippets.java#L46-L63"
+  },
+  "core.capabilities": {
+    "code": "if (bloom.has(Capability.BOSS_BAR)) {\n    // Paper: show a boss bar\n} else {\n    // 1.7 / 1.8: use the scoreboard or chat instead\n}\n\nMinecraftVersion version = bloom.platform().minecraftVersion();\nif (version.isAtLeast(MinecraftVersion.V1_21_1)) {\n    // only reached on modern Paper\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/CoreSnippets.java#L69-L78"
+  },
+  "core.services": {
+    "code": "bloom.services().register(Economy.class, myEconomy); // closed on shutdown if it is AutoCloseable\nEconomy economy = bloom.service(Economy.class); // throws a descriptive error if missing",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/CoreSnippets.java#L88-L89"
+  },
+  "events.subscribe": {
+    "code": "Subscription welcome = bloom.events()\n        .subscribe(PlayerJoinEvent.class, event -> bloom.messages().send(event.getPlayer(), \"&dWelcome!\"));\nwelcome.unsubscribe(); // or let Bloom remove it on shutdown",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/EventSnippets.java#L20-L22"
+  },
+  "events.builder": {
+    "code": "bloom.events()\n        .listen(EntityDamageByEntityEvent.class)\n        .priority(EventPriority.HIGH)\n        .ignoreCancelled()\n        .filter(event -> event.getDamager().getType().name().equals(\"PLAYER\"))\n        .handler(event -> event.setDamage(event.getDamage() * 0.8));\n\nbloom.events()\n        .listen(BlockBreakEvent.class)\n        .limit(1) // unsubscribes itself after the first matching event\n        .handler(event -> event.getPlayer().sendMessage(\"Your first block!\"));",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/EventSnippets.java#L28-L38"
+  },
+  "events.listener": {
+    "code": "static final class QuitListener implements Listener {\n    @EventHandler\n    public void onQuit(PlayerQuitEvent event) {\n        event.setQuitMessage(null);\n    }\n}\n\nstatic void register(Bloom bloom) {\n    bloom.events().register(new QuitListener()); // unregistered when Bloom shuts down\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/EventSnippets.java#L43-L52"
+  },
+  "gui.basic": {
+    "code": "Items items = Items.of(bloom);\nMenu menu = Menu.builder()\n        .title(\"&dWarps\")\n        .rows(3)\n        .button(\n                11,\n                Button.of(items.builder(\"GRASS_BLOCK\").name(\"&aSpawn\").build(), click -> {\n                    click.player().performCommand(\"spawn\");\n                    click.close();\n                }))\n        .button(\n                15,\n                Button.of(\n                        items.builder(\"DIAMOND_SWORD\").name(\"&cArena\").build(),\n                        click -> click.player().performCommand(\"warp arena\")))\n        .fill(Button.of(\n                items.builder(\"GRAY_STAINED_GLASS_PANE\").name(\" \").build()))\n        .build();\n\nMenus.of(bloom).open(player, menu);",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L25-L44"
+  },
+  "gui.layout": {
+    "code": "Items items = Items.of(bloom);\nreturn Menu.builder()\n        .title(\"&d&lBlossom Shop\")\n        .layout(\"#########\", \"#  h f  #\", \"####x####\")\n        .bind(\n                '#',\n                Button.of(items.builder(\"PINK_STAINED_GLASS_PANE\")\n                        .name(\" \")\n                        .build()))\n        .bind('h', heal)\n        .bind('f', feed)\n        .bind('x', exit)\n        .build();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L50-L62"
+  },
+  "gui.buttons": {
+    "code": "Button vip = Button.of(vipIcon, click -> click.player().sendMessage(\"Welcome, VIP\"))\n        .permission(\"shop.vip\", lockedIcon); // players without the permission see lockedIcon\n\nButton nightOnly = Button.of(\n                items.builder(\"CLOCK\").name(\"&9Night market\").build())\n        .visibleWhen(view -> view.player().getWorld().getTime() > 13000);\n\nButton health = Button.dynamic(view -> items.builder(\"GOLDEN_APPLE\")\n        .name(\"&aHealth: \" + (int) view.player().getHealth())\n        .build());",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L71-L80"
+  },
+  "gui.state": {
+    "code": "Button quantity = Button.dynamic(view -> items.builder(\"GOLD_NUGGET\")\n                .name(\"&eQuantity: \" + view.state().getOrDefault(QUANTITY, 1))\n                .lore(\"&7Left click +1, right click -1\")\n                .build())\n        .onClick(click -> {\n            int current = click.view().state().getOrDefault(QUANTITY, 1);\n            int next = click.kind().isRight() ? Math.max(1, current - 1) : current + 1;\n            click.view().state().set(QUANTITY, next);\n            click.refresh(); // re-renders this player's view only\n        });",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L95-L104"
+  },
+  "gui.paginated": {
+    "code": "Menu warpList = Menu.builder()\n        .title(\"&dWarps &8(page {page} of {pages})\")\n        .apply(MenuTemplates.paged(\n                6,\n                Button.of(items.builder(\"BLACK_STAINED_GLASS_PANE\")\n                        .name(\" \")\n                        .build()),\n                items.builder(\"ARROW\").name(\"&7Previous\").build(),\n                items.builder(\"ARROW\").name(\"&7Next\").build(),\n                Button.of(items.builder(\"BARRIER\").name(\"&cBack\").build(), click -> click.back())))\n        .paginate(view -> {\n            List<Button> buttons = new ArrayList<Button>();\n            for (final String warp : warps) {\n                buttons.add(Button.of(\n                        items.builder(\"ENDER_PEARL\").name(\"&f\" + warp).build(),\n                        click -> click.player().performCommand(\"warp \" + warp)));\n            }\n            return buttons;\n        })\n        .build();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L112-L131"
+  },
+  "gui.confirm": {
+    "code": "Menu confirm = ConfirmMenu.builder()\n        .title(\"&cDelete home \" + home + \"?\")\n        .confirm(items.builder(\"LIME_WOOL\").name(\"&aDelete\").build(), click -> {\n            click.player().performCommand(\"delhome \" + home);\n            click.close();\n        })\n        .cancel(items.builder(\"RED_WOOL\").name(\"&cKeep it\").build()) // default: back, or close\n        .build();\nMenus.of(bloom).open(player, confirm);",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L139-L147"
+  },
+  "gui.navigation": {
+    "code": "Menu main = Menu.builder()\n        .title(\"&dMenu\")\n        .rows(1)\n        .button(\n                4,\n                Button.of(\n                        items.builder(\"COMPARATOR\").name(\"&7Settings\").build(),\n                        click -> click.open(settings))) // opens next tick; this menu goes into the history\n        .build();\n// In the settings menu: Button.of(backIcon, click -> click.back())",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L154-L163"
+  },
+  "gui.templates": {
+    "code": "MenuTemplate branded = builder -> builder.border(Button.of(\n                items.builder(\"PINK_STAINED_GLASS_PANE\").name(\" \").build()))\n        .item(4, logo);\n\nMenu profile = Menu.builder().rows(5).apply(branded).title(\"&dProfile\").build();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L173-L177"
+  },
+  "gui.service": {
+    "code": "Menus menus = Menus.of(bloom).clickDebounce(Duration.ofMillis(150)); // default 100 ms",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/GuiSnippets.java#L184-L184"
+  },
+  "items.builder": {
+    "code": "Items items = Items.of(bloom);\nItemStack sword = items.builder(\"DIAMOND_SWORD\")\n        .name(\"&dBlossom Blade\")\n        .lore(\"&7Owner: &f{owner}\", \"&7Forged under falling petals.\")\n        .placeholders(Placeholder.of(\"owner\", player.getName()))\n        .enchant(\"sharpness\", 5) // modern key; \"DAMAGE_ALL\" works too\n        .flags(ItemFlagKey.HIDE_ENCHANTS)\n        .unbreakable(true)\n        .glow()\n        .build();\nplayer.getInventory().addItem(sword);",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ItemSnippets.java#L21-L31"
+  },
+  "items.materials": {
+    "code": "Items items = Items.of(bloom);\nItemStack wool = items.create(\"RED_WOOL\", 16).orElseThrow(IllegalStateException::new); // WOOL:14 on 1.8\nItemStack head = items.builder(\"PLAYER_HEAD\").build(); // SKULL_ITEM:3 on 1.8\nboolean hasCopper = items.exists(\"COPPER_INGOT\"); // false on 1.8, true on modern Paper\n\n// Your own keys, for items that differ between versions:\nitems.materials().register(\"SHOP_ICON\", \"AMETHYST_SHARD\", \"DIAMOND\", 0);\nItemStack icon = items.builder(\"SHOP_ICON\").name(\"&dShop\").build();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ItemSnippets.java#L37-L44"
+  },
+  "items.custom": {
+    "code": "Items items = Items.of(bloom);\nCustomItem ruby =\n        items.define(\"ruby\", items.builder(\"RED_DYE\").name(\"&cRuby\").glow());\n\nplayer.getInventory().addItem(ruby.create(3));\n\nif (ruby.matches(inHand)) { // checks persistent data, not the name: look-alikes with the same name don't match\n    player.sendMessage(\"That's a real ruby.\");\n}\nOptional<CustomItem> any = items.match(inHand); // which custom item is this, if any?",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ItemSnippets.java#L54-L63"
+  },
+  "items.data": {
+    "code": "Items items = Items.of(bloom);\nItemStack tagged = items.setData(stack, \"upgrade-level\", \"3\"); // returns a copy\nint level = Integer.parseInt(items.getData(tagged, \"upgrade-level\").orElse(\"0\"));\nItemStack plain = items.removeData(tagged, \"upgrade-level\");",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ItemSnippets.java#L70-L73"
+  },
+  "items.serialize": {
+    "code": "Items items = Items.of(bloom);\nString stored = items.serialize(stack); // \"paper:...\" on modern servers, \"bukkit:...\" on legacy servers\nItemStack restored = items.deserialize(stored);",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ItemSnippets.java#L81-L83"
+  },
+  "items.capability": {
+    "code": "ItemBuilder builder = Items.of(bloom).builder(\"STICK\").name(\"&6Magic wand\");\nif (bloom.has(Capability.CUSTOM_MODEL_DATA)) {\n    builder.customModelData(4201); // resource-pack model on modern servers\n}\nreturn builder.build();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ItemSnippets.java#L90-L94"
+  },
+  "messaging.send": {
+    "code": "Messenger messages = bloom.messages().withPrefix(\"&d&lShop &8» &7\");\nmessages.send(\n        player,\n        \"You bought &f{amount}x {item}&7.\",\n        Placeholder.of(\"amount\", 3),\n        Placeholder.of(\"item\", \"Golden Apple\"));\nmessages.broadcast(\"&f{player} &7joined the arena!\", Placeholder.of(\"player\", player.getName()));",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/MessagingSnippets.java#L22-L28"
+  },
+  "messaging.escaping": {
+    "code": "// Placeholder.of: plain text. \"&c\" or \"<red>\" inside chatMessage is shown literally.\nbloom.messages().send(player, \"&7[Chat] &f{message}\", Placeholder.of(\"message\", chatMessage));\n// Placeholder.formatted: trusted text that should keep its formatting.\nbloom.messages().send(player, \"Rank: {rank}\", Placeholder.formatted(\"rank\", \"&6&lVIP\"));",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/MessagingSnippets.java#L34-L37"
+  },
+  "messaging.minimessage": {
+    "code": "Messenger mini = bloom.messages().withFormat(TextFormat.MINIMESSAGE);\nmini.send(\n        player,\n        \"<gradient:#F2A7CC:#B9A0DD>Welcome</gradient> <gray>to the server, <white>{player}</white>!\",\n        Placeholder.of(\"player\", player.getName()));\n// On 1.7/1.8 the gradient uses its first colour; colours, bold, italic and so on convert exactly.",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/MessagingSnippets.java#L43-L48"
+  },
+  "messaging.titles": {
+    "code": "Messenger messages = bloom.messages();\nmessages.actionBar(player, \"&a+5 coins\");\nmessages.title(\n        player,\n        Title.of(\"&dRound 2\", \"&7Fight!\")\n                .times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500)));\n// Returns false when skipped (e.g. action bars on 1.7.10 with the default SKIP policy).\nboolean shown = messages.actionBar(player, \"&eCapturing...\");",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/MessagingSnippets.java#L54-L61"
+  },
+  "messaging.policy": {
+    "code": "Messenger strict = bloom.messages().withUnsupportedPolicy(UnsupportedFeaturePolicy.THROW);\nMessenger lenient = bloom.messages().withUnsupportedPolicy(UnsupportedFeaturePolicy.FALLBACK_TO_CHAT);\nlenient.title(player, Title.of(\"&6Victory\")); // a chat line on servers without titles",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/MessagingSnippets.java#L70-L72"
+  },
+  "messaging.bossbar": {
+    "code": "BloomBossBar bar = bloom.messages()\n        .bossBar(\n                \"&dEvent ends in {time}\",\n                1.0f,\n                BossBarColor.PINK,\n                BossBarStyle.SEGMENTED_10,\n                Placeholder.of(\"time\", \"5:00\"));\nbar.show(player);\nbar.progress(0.5f).title(\"&dEvent ends in 2:30\");\nbar.close(); // also closed automatically on shutdown\n// isFunctional() is false on servers without boss bars (unless the policy is THROW, which throws instead)",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/MessagingSnippets.java#L79-L89"
+  },
+  "scheduling.basics": {
+    "code": "BloomScheduler scheduler = bloom.scheduler();\nscheduler.sync(() -> player.sendMessage(\"Next tick\"));\nscheduler.syncLater(() -> player.sendMessage(\"Three seconds later\"), Duration.ofSeconds(3));\nScheduledTask task = scheduler.syncRepeating(self -> player.sendMessage(\"Every second\"), 0, 20);\ntask.cancel();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/SchedulingSnippets.java#L16-L20"
+  },
+  "scheduling.countdown": {
+    "code": "final int[] seconds = {5};\nbloom.scheduler()\n        .syncRepeating(\n                task -> {\n                    if (!player.isOnline() || seconds[0] == 0) {\n                        task.cancel(); // a repeating task receives its own handle\n                        return;\n                    }\n                    bloom.messages().actionBar(player, \"&eStarting in \" + seconds[0]--);\n                },\n                Duration.ZERO,\n                Duration.ofSeconds(1));",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/SchedulingSnippets.java#L26-L37"
+  },
+  "scheduling.async": {
+    "code": "bloom.scheduler()\n        .supplyAsync(() -> loadProfileFromWeb(player.getUniqueId())) // background thread: no Bukkit calls\n        .thenAcceptAsync(\n                profile -> player.sendMessage(\"Loaded \" + profile), // back on the main thread\n                bloom.scheduler().mainThreadExecutor());",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/SchedulingSnippets.java#L47-L51"
+  },
+  "scheduling.guard": {
+    "code": "bloom.scheduler().ensurePrimaryThread(\"Teleporting players\");\n// IllegalStateException off the main thread: \"Teleporting players must be called from the main server\n// thread, but was called from thread 'pool-3-thread-1'. Switch threads with scheduler().sync(...) ...\"",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/SchedulingSnippets.java#L57-L59"
+  },
+  "home.plugin": {
+    "code": "public final class ShopPlugin extends JavaPlugin {\n    private Bloom bloom;\n\n    @Override\n    public void onEnable() {\n        bloom = Bloom.enable(this); // detects 1.7.10 ... 26.x and loads the matching adapter\n        Items items = Items.of(bloom);\n\n        Menu shop = Menu.builder()\n                .title(\"&dBlossom Shop\")\n                .rows(3)\n                .button(\n                        13,\n                        Button.of(items.builder(\"COOKED_BEEF\").name(\"&6Feed me\").build(), click -> {\n                            click.player().setFoodLevel(20);\n                            bloom.messages().actionBar(click.player(), \"&aYum!\");\n                            click.close();\n                        }))\n                .build();\n\n        bloom.events()\n                .subscribe(\n                        PlayerJoinEvent.class,\n                        event -> bloom.scheduler()\n                                .syncLater(() -> Menus.of(bloom).open(event.getPlayer(), shop), 20));\n    }\n\n    @Override\n    public void onDisable() {\n        bloom.shutdown(); // closes menus, cancels tasks, unregisters listeners\n    }\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/ShopPlugin.java#L12-L43"
+  },
+  "storage.repository": {
+    "code": "final class BalanceRepository extends SqlRepository<UUID, Balance> {\n\n    BalanceRepository(Database db) {\n        super(\n                db,\n                \"balances\",\n                \"uuid\",\n                Arrays.asList(\"uuid\", \"coins\"),\n                rs -> new Balance(UUID.fromString(rs.getString(\"uuid\")), rs.getLong(\"coins\")));\n    }\n\n    @Override\n    protected UUID keyOf(Balance balance) {\n        return balance.uuid;\n    }\n\n    @Override\n    protected Object[] valuesOf(Balance balance) {\n        return new Object[] {balance.uuid, balance.coins}; // same order as the column list\n    }\n}\n\nfinal class Balance {\n    final UUID uuid;\n    final long coins;\n\n    Balance(UUID uuid, long coins) {\n        this.uuid = uuid;\n        this.coins = coins;\n    }\n}\n// Usage: repository.find(id), repository.save(balance), repository.delete(id), repository.findAll()",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StatsRepositorySnippet.java#L9-L40"
+  },
+  "storage.open": {
+    "code": "Database db = Database.builder()\n        .sqlite(plugin.getDataFolder().toPath().resolve(\"data.db\"))\n        .poolName(plugin.getName())\n        .migrationTable(\"myplugin_schema_history\")\n        .mainThreadCheck(bloom.scheduler()::isPrimaryThread)\n        .logger(plugin.getLogger())\n        .build();\nbloom.services().register(Database.class, db); // Bloom closes it on shutdown, after queued work",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StorageSnippets.java#L20-L27"
+  },
+  "storage.mysql": {
+    "code": "Database db = Database.builder()\n        .mysql(\"localhost\", 3306, \"minecraft\", \"bloom\", \"change-me\")\n        .poolSize(8)\n        .property(\"useSSL\", \"true\")\n        .poolName(plugin.getName())\n        .migrationTable(\"myplugin_schema_history\")\n        .mainThreadCheck(bloom.scheduler()::isPrimaryThread)\n        .build();",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StorageSnippets.java#L34-L41"
+  },
+  "storage.migrate": {
+    "code": "List<Migration> migrations = Arrays.asList(\n        Migration.of(\n                1,\n                \"create balances\",\n                \"CREATE TABLE IF NOT EXISTS balances (uuid VARCHAR(36) PRIMARY KEY, coins BIGINT NOT NULL)\"),\n        Migration.of(\n                2,\n                \"add last seen\",\n                tx -> tx.update(\"ALTER TABLE balances ADD COLUMN last_seen BIGINT NOT NULL DEFAULT 0\")));\ndb.migrate(migrations).join(); // blocking is fine in onEnable, before the server ticks",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StorageSnippets.java#L48-L57"
+  },
+  "storage.queries": {
+    "code": "UUID id = player.getUniqueId();\ndb.update(\"INSERT INTO balances (uuid, coins) VALUES (?, ?)\", id, 100L);\n\ndb.queryOne(\"SELECT coins FROM balances WHERE uuid = ?\", rs -> rs.getLong(\"coins\"), id)\n        .thenAcceptAsync(\n                coins -> player.sendMessage(\"Coins: \" + coins.orElse(0L)), // main thread\n                bloom.scheduler().mainThreadExecutor())\n        .exceptionally(error -> {\n            bloom.plugin().getLogger().warning(\"Balance lookup failed: \" + error.getMessage());\n            return null;\n        });",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StorageSnippets.java#L63-L73"
+  },
+  "storage.transaction": {
+    "code": "db.transaction(tx -> {\n    Optional<Long> balance =\n            tx.queryOne(\"SELECT coins FROM balances WHERE uuid = ?\", rs -> rs.getLong(1), from);\n    if (!balance.isPresent() || balance.get() < amount) {\n        throw new IllegalStateException(\"Not enough coins\"); // rolls back\n    }\n    tx.update(\"UPDATE balances SET coins = coins - ? WHERE uuid = ?\", amount, from);\n    tx.update(\"UPDATE balances SET coins = coins + ? WHERE uuid = ?\", amount, to);\n    return balance.get() - amount;\n});",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StorageSnippets.java#L79-L88"
+  },
+  "storage.blocking": {
+    "code": "bloom.scheduler().async(() -> {\n    // Already off the main thread, so synchronous calls are fine here:\n    int rows = db.blocking().update(\"DELETE FROM balances WHERE coins = 0\");\n    bloom.plugin().getLogger().info(\"Removed \" + rows + \" empty accounts\");\n});",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/StorageSnippets.java#L94-L98"
+  },
+  "utilities.cooldowns": {
+    "code": "private final Cooldowns<UUID> enderPearl = Cooldowns.of(Duration.ofSeconds(16));\n\nboolean tryThrowPearl(Player player) {\n    if (!enderPearl.tryUse(player.getUniqueId())) {\n        Duration left = enderPearl.remaining(player.getUniqueId());\n        player.sendMessage(\"Pearl cooldown: \" + Durations.format(left)); // \"Pearl cooldown: 12s\"\n        return false;\n    }\n    return true;\n}",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/UtilitySnippets.java#L16-L25"
+  },
+  "utilities.durations": {
+    "code": "Duration banLength = Durations.parse(\"1d 12h\"); // also \"90s\", \"1h30m\", \"500ms\", \"2w\"\nString shortForm = Durations.format(banLength); // \"1d 12h\"\nString words = Durations.formatLong(banLength); // \"1 day and 12 hours\"",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/UtilitySnippets.java#L30-L32"
+  },
+  "utilities.cache": {
+    "code": "ExpiringCache<UUID, String> ranks = ExpiringCache.create(Duration.ofMinutes(5), 1_000);\nUUID id = UUID.randomUUID();\nString rank = ranks.get(id, key -> \"member\"); // computes and caches on a miss\nranks.invalidate(id);",
+    "source": "bloom-examples/docs-snippets/src/main/java/io/github/crownalonedev/bloomexamples/docs/UtilitySnippets.java#L40-L43"
+  },
+  "testing.countdown": {
+    "code": "/** Code under test depends on BloomScheduler, not on Bukkit, so it can be tested without a server. */\nfinal class Countdown {\n    private final BloomScheduler scheduler;\n    private int remaining;\n\n    Countdown(BloomScheduler scheduler) {\n        this.scheduler = scheduler;\n    }\n\n    void start(int seconds) {\n        remaining = seconds;\n        scheduler.syncRepeating(\n                task -> {\n                    if (--remaining <= 0) {\n                        task.cancel();\n                    }\n                },\n                20,\n                20);\n    }\n\n    boolean finished() {\n        return remaining <= 0;\n    }\n}\n\nclass CountdownTest {\n    @Test\n    void finishesAfterThreeSeconds() {\n        ManualScheduler scheduler = ManualScheduler.create();\n        Countdown countdown = new Countdown(scheduler);\n        countdown.start(3);\n\n        scheduler.tick(59);\n        assertTrue(!countdown.finished());\n        scheduler.tick();\n        assertTrue(countdown.finished());\n        assertEquals(0, scheduler.activeTaskCount());\n    }\n}",
+    "source": "bloom-examples/docs-snippets/src/test/java/io/github/crownalonedev/bloomexamples/docs/CountdownTest.java#L11-L50"
+  },
+  "install.gradle-cross": {
+    "code": "java {\n    toolchain { languageVersion = JavaLanguageVersion.of(21) }\n    // The plugin is Java 8 bytecode but bundles Bloom's Java 21 modern adapter, which Bloom only loads on Java 21+.\n    disableAutoTargetJvm()\n}\n\nval bloomVersion = \"0.1.0-SNAPSHOT\"\n\ndependencies {\n    compileOnly(\"org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT\") // compile against the oldest API you support\n    implementation(\"io.github.crownalonedev.bloom:bloom-gui:$bloomVersion\") // menus + items + core\n    runtimeOnly(\"io.github.crownalonedev.bloom:bloom-legacy:$bloomVersion\") // 1.7.10 - 1.8.9\n    runtimeOnly(\"io.github.crownalonedev.bloom:bloom-modern:$bloomVersion\") // Paper 1.21.1 - 26.3.x\n}\n\ntasks.withType<JavaCompile>().configureEach {\n    options.release = 8\n}\n\ntasks.shadowJar {\n    archiveClassifier = \"\"\n    // Relocate Bloom into your own package so several plugins can embed different Bloom versions.\n    // The trailing dots matter: they stop the pattern from matching unrelated packages.\n    relocate(\"io.github.crownalonedev.bloom.\", \"com.example.myplugin.libs.bloom.\")\n}",
+    "source": "bloom-examples/template/build.gradle.kts#L17-L41"
+  },
+  "install.plugin": {
+    "code": "public final class MyPlugin extends JavaPlugin {\n    private Bloom bloom;\n\n    @Override\n    public void onEnable() {\n        bloom = Bloom.enable(this);\n        bloom.messages().send(getServer().getConsoleSender(), \"&dHello from Bloom on \" + bloom.platform().describe());\n    }\n\n    @Override\n    public void onDisable() {\n        if (bloom != null) {\n            bloom.shutdown();\n        }\n    }\n}",
+    "source": "bloom-examples/template/src/main/java/com/example/myplugin/MyPlugin.java#L7-L22"
+  },
+  "install.pluginyml": {
+    "code": "name: MyPlugin\nversion: '${version}'\nmain: com.example.myplugin.MyPlugin\n# Ignored by 1.7/1.8; tells modern Paper this is not a legacy (pre-1.13) plugin.\napi-version: '1.21'",
+    "source": "bloom-examples/template/src/main/resources/plugin.yml#L2-L6"
+  }
+}

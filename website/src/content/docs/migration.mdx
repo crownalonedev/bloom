@@ -1,0 +1,37 @@
+---
+title: Migration guides
+description: Moving an existing Bukkit plugin to Bloom, and upgrading between Bloom versions.
+---
+
+## From plain Bukkit code
+
+Bloom does not replace Bukkit: your plugin still extends `JavaPlugin` and uses Bukkit types such as `Player` and
+`ItemStack`. Move one area at a time.
+
+| You have | Replace with |
+| --- | --- |
+| `Bukkit.getScheduler().runTaskLater(...)` | `bloom.scheduler().syncLater(...)`; cancelled automatically |
+| `getServer().getPluginManager().registerEvents(...)` | `bloom.events().register(...)` or `subscribe(...)` |
+| `ChatColor.translateAlternateColorCodes('&', ...)` + string concatenation | `bloom.messages().send(player, template, Placeholder.of(...))` |
+| NMS packets for action bars and titles | `messages.actionBar(...)`, `messages.title(...)` |
+| `new ItemStack(Material.WOOL, 1, (short) 14)` | `items.builder("RED_WOOL")` |
+| Custom items recognised by display name | `items.define(id, builder)` and `customItem.matches(stack)` |
+| A `Listener` per menu, checking titles | `Menu.builder()` and `Menus.of(bloom).open(...)` |
+| `getConfig()` with manual checks | `YamlConfig` with defaults, validation and migrations |
+| JDBC on the main thread | `Database` with asynchronous queries |
+
+Two things to watch:
+
+- Items created before switching are not recognised as custom items, because they lack Bloom's persistent id. Give
+  players replacements, or match them once by your old method and re-tag them with `items.tag(stack, id)`.
+- Bloom's menus cancel all clicks while open. If old code relied on players taking items out of a GUI, give them the
+  item from a button handler instead.
+
+## Between Bloom versions
+
+Bloom is pre-1.0: minor versions may change APIs, and every change is listed in the [changelog](/changelog). From 1.0,
+Bloom follows semantic versioning: breaking changes only in major versions, deprecations at least one minor version
+before removal.
+
+Data formats are treated as compatibility promises: config files migrate with backups, database schemas migrate with
+history, and item ids and data keep their storage format.

@@ -1,0 +1,44 @@
+---
+title: Introduction
+description: What Bloom is, which servers it runs on, and how these docs are organised.
+---
+
+Bloom is a Java framework for Minecraft plugins on Bukkit-family servers. It gives you one API for the things
+almost every plugin needs, and runs the same plugin on two very different generations of Minecraft:
+
+- **Legacy**: Bukkit, Spigot and PaperSpigot **1.7.10 to 1.8.9** on Java 8, the home of most PvP and HCF servers.
+- **Modern**: Paper **1.21.1 to 1.21.11** on Java 21 and **26.1 to 26.3.x** on Java 25.
+
+Between them, Bukkit's API changed in ways that break compiled plugins: methods changed return types, classes became
+interfaces, materials were renamed and text moved to components. Bloom compiles your plugin against the oldest API,
+identifies the server when it starts, and loads a **version adapter** that handles the differences.
+
+## What you get
+
+| Area | Module | Highlights |
+| --- | --- | --- |
+| Core | `bloom-bukkit` | One-line startup, platform detection, scheduler, messages, events |
+| Menus | `bloom-gui` | Layouts, pagination, back navigation, confirmation dialogs, duplication-safe clicks |
+| Items | `bloom-items` | Modern material names everywhere, persistent custom item ids, serialization |
+| Configuration | `bloom-config` | Defaults, typed getters, validation with line numbers, migrations, comment-safe saves |
+| Storage | `bloom-storage` | SQLite, MySQL and MariaDB off the main thread, transactions, migrations |
+| Testing | `bloom-testing` | A tick-by-tick scheduler and a controllable clock |
+
+## How Bloom thinks about versions
+
+Bloom never pretends. If a server has no adapter, Bloom refuses to start and explains why. If a server lacks a
+feature (boss bars on 1.8, for example), Bloom reports it as a missing **capability** you can check, and each API
+documents what happens instead.
+
+<Callout type="compat">
+Bloom is pre-release software. The modern adapter is tested on MockBukkit (Paper 1.21.11 API) and compiles against
+Paper 1.21.1 and 26.3. The legacy adapter is unit-tested and compiles against Spigot 1.8.8; its real-server test runs
+are still pending. See [Compatibility](/docs/compatibility) for exactly what has been verified.
+</Callout>
+
+## Where to go next
+
+- New to Bloom: follow the [Quickstart](/docs/quickstart).
+- Setting up a build: [Installation](/docs/installation) covers legacy, modern and cross-version plugins.
+- Curious about the design: read [Architecture](/docs/architecture).
+- Using an AI coding agent: see [AI integration](/docs/ai-integration).

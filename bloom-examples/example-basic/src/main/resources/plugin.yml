@@ -1,0 +1,9 @@
+name: BloomExampleBasic
+version: '${version}'
+main: io.github.crownalonedev.bloomexamples.basic.BasicExamplePlugin
+# Ignored by 1.7/1.8 servers; required on modern Paper so the plugin is not treated as a legacy (pre-1.13) plugin.
+api-version: '1.21'
+description: Bloom example - lifecycle, messages, scheduler, events and cooldowns.
+commands:
+  hello:
+    description: Say hello using Bloom messages, action bars and titles.
