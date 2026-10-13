@@ -12,6 +12,33 @@ At startup Bloom checks how it was loaded. If its classes came from another plug
 that happens when a plugin shades Bloom without relocating it, and another plugin then picks up those classes.
 With `BloomOptions.debug(true)` Bloom also tells you when your own copy is not relocated.
 
+## Check your jar with bloom-doctor
+
+`bloom-doctor` inspects the jar you are about to ship, before a server does:
+
+- `plugin.yml` exists and its `main` class is in the jar;
+- Bloom, SnakeYAML, HikariCP and SLF4J are relocated, and the Bukkit API is not bundled;
+- at least one platform adapter is included (and which server families that covers);
+- the bytecode level fits the oldest server you target (Java 8 for 1.7.10 – 1.8.9);
+- with API jars given, every Bukkit/Paper method, field and class your jar uses exists **with the same shape** on
+  each target server. This is what catches `NoSuchMethodError`, `NoSuchFieldError` and
+  `IncompatibleClassChangeError` (for example `InventoryView`, a class on 1.8 and an interface on 1.21) without
+  booting a server.
+
+Build it from the Bloom repository (`./gradlew :bloom-doctor:shadowJar`), then:
+
+```bash
+java -jar bloom-doctor-0.1.0-SNAPSHOT-all.jar build/libs/my-plugin.jar \
+  --legacy-api spigot-1.8.8=spigot-api-1.8.8-R0.1-SNAPSHOT.jar,bungeecord-chat-1.8-SNAPSHOT.jar \
+  --modern-api paper-1.21.11=paper-api-1.21.11-R0.1-SNAPSHOT.jar,adventure-api-4.26.1.jar,...
+```
+
+List the API jar together with its dependencies for each target (Gradle: the `compileClasspath` of a project that
+depends on that API). The legacy adapter is not checked against modern APIs and vice versa, because Bloom never
+loads it there. If your own code has version-specific classes that you only load after a version check, exclude
+their package with `--exclude com.example.myplugin.v1_21`. The exit code is 1 when there is an error, so the doctor
+can run in CI. Bloom itself runs it on every example plugin in its build.
+
 ## Standalone runtime (planned)
 
 A Bloom plugin that others depend on, instead of shading, is on the roadmap. It needs version negotiation between

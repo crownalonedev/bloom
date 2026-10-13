@@ -6,14 +6,16 @@ plugins {
 group = "com.example"
 version = "1.0.0"
 
+// @snippet:install.gradle-cross
 repositories {
     mavenCentral()
     // Bloom is not on a public repository yet: run `./gradlew publishToMavenLocal` in the Bloom repository first.
     mavenLocal()
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // spigot-api
+    // spigot-api 1.8.8 depends on bungeecord-chat 1.8-SNAPSHOT, which only PaperMC's repository still serves.
+    maven("https://repo.papermc.io/repository/maven-public/")
 }
 
-// @snippet:install.gradle-cross
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
     // The plugin is Java 8 bytecode but bundles Bloom's Java 21 modern adapter, which Bloom only loads on Java 21+.
