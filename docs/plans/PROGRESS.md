@@ -53,12 +53,9 @@ All ten phases of the master plan are implemented. Pre-release 0.1.0-SNAPSHOT; n
   (MIT), CHANGELOG, SECURITY.md.
 
 ## Waiting on the owner
-1. Re-run `scripts
-ealserver
-un.bat 1.7.10 1.8.8`: the legacy item deserialization allow-list (security fix) has
-   unit tests but has not yet run on real servers (self-test check `items.serialize`).
-2. Enable GitHub private vulnerability reporting (Settings → Code security) — SECURITY.md points to it.
-3. First release: follow docs/guides/RELEASING.md (Maven Central account + signing key secrets, then the
+1. Done 2026-10-13: 1.7.10 and 1.8.8 re-run with the deserialization allow-list; all versions pass.
+2. Done 2026-10-13: GitHub private vulnerability reporting enabled.
+3. First release (0.1.0 in progress): follow docs/guides/RELEASING.md (Maven Central account + signing key secrets, then the
    "Release (draft)" workflow). Website deployment: docs/guides/DEPLOYMENT.md (Cloudflare account).
 
 ## Real-server verification (2026-10-13, Windows, scripts/realserver/run.bat)
