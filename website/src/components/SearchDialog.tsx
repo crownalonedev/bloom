@@ -142,6 +142,7 @@ export function SearchDialog() {
             }}
             onKeyDown={onInputKey}
             placeholder="Search guides, APIs and errors"
+            aria-label="Search the documentation"
             className="h-14 flex-1 bg-transparent text-[1rem] outline-none placeholder:text-muted"
             role="combobox"
             aria-expanded={results.length > 0}

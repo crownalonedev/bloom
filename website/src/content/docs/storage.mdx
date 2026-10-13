@@ -87,6 +87,7 @@ but deletes and re-inserts the row, so `ON DELETE CASCADE` children are removed;
 - Error messages include the SQL statement but never parameter values, which may contain personal data.
 
 <Callout type="compat">
-SQLite is tested by Bloom's build on Java 8 and Java 21. Tests against real MySQL 8.4 and MariaDB 11 exist
-(`scripts/test-network-databases.sh`) and need Docker; they have not been run yet.
+SQLite is tested by Bloom's build on Java 8 and Java 21, and with sqlite-jdbc 3.7.2, the driver 1.7.10 and 1.8.x
+servers bundle. Every change is also tested against real MySQL 8.4 and MariaDB 11 in CI
+(`scripts/test-network-databases.sh` runs the same tests locally with Docker).
 </Callout>

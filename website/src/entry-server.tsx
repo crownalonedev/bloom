@@ -3,9 +3,12 @@ import { prerender } from "react-dom/static";
 import { Router } from "wouter";
 import { App } from "./App";
 import { headFor } from "./lib/head";
+import apiData from "./generated/api.json";
+import { registerApi } from "./pages/ApiReferencePage";
 import { registerDoc } from "./pages/DocPage";
 
-// Every doc page is available synchronously during prerendering (see DocPage).
+// The API manifest and every doc page are available synchronously during prerendering (see DocPage).
+registerApi(apiData);
 const docModules = import.meta.glob<{ default: ComponentType }>("./content/docs/*.mdx", { eager: true });
 for (const [path, module] of Object.entries(docModules)) {
   registerDoc(path.replace(/^.*\/(.+)\.mdx$/, "$1"), module.default);

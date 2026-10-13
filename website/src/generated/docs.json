@@ -164,6 +164,11 @@
       },
       {
         "depth": 2,
+        "text": "Check your jar with bloom-doctor",
+        "anchor": "check-your-jar-with-bloom-doctor"
+      },
+      {
+        "depth": 2,
         "text": "Standalone runtime (planned)",
         "anchor": "standalone-runtime-planned"
       },

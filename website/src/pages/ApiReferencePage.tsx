@@ -1,6 +1,5 @@
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import apiData from "../generated/api.json";
+import { Suspense, use, useMemo, useState } from "react";
 import { project } from "../lib/site";
 
 type Param = { name: string; type: string; doc: string };
@@ -29,7 +28,36 @@ type ApiType = {
 type ApiModule = { name: string; description?: string; packages: { name: string; types: ApiType[] }[] };
 type Api = { available: boolean; reason?: string; bloomVersion?: string; generatedAt?: string; modules: ApiModule[] };
 
-const api = apiData as unknown as Api;
+// The manifest is large (every public type and member), so it is not part of the main bundle: the server registers
+// it before prerendering and the client loads it before hydrating /api or when navigating there. As with doc pages,
+// prerendered HTML therefore never contains a pending Suspense boundary.
+let loadedApi: Api | undefined;
+let pendingApi: Promise<Api> | undefined;
+
+export function registerApi(data: unknown) {
+  loadedApi = data as Api;
+}
+
+export function loadApi(): Promise<Api> {
+  pendingApi ??= import("../generated/api.json").then((module) => {
+    registerApi(module.default);
+    return loadedApi!;
+  });
+  return pendingApi;
+}
+
+export function ApiReferencePage() {
+  if (loadedApi) return <ApiReference api={loadedApi} />;
+  return (
+    <Suspense fallback={<main id="main" className="mx-auto max-w-[90rem] px-5 py-12 lg:px-8"><h1 className="font-display text-[2.6rem] font-bold">API reference</h1><p className="mt-3 text-muted">Loading…</p></main>}>
+      <LoadingApi />
+    </Suspense>
+  );
+}
+
+function LoadingApi() {
+  return <ApiReference api={use(loadApi())} />;
+}
 
 function matches(type: ApiType, query: string) {
   if (!query) return true;
@@ -73,7 +101,7 @@ function MemberView({ member }: { member: Member }) {
   );
 }
 
-export function ApiReferencePage() {
+function ApiReference({ api }: { api: Api }) {
   const [query, setQuery] = useState("");
   const modules = useMemo(
     () =>
@@ -85,7 +113,7 @@ export function ApiReferencePage() {
             .filter((p) => p.types.length),
         }))
         .filter((m) => m.packages.length),
-    [query],
+    [api, query],
   );
   const total = api.modules.reduce((n, m) => n + m.packages.reduce((k, p) => k + p.types.length, 0), 0);
 

@@ -145,8 +145,8 @@ Bloom uses these levels and never mixes them up:
 - **Supported**: Bloom starts and selects an adapter.
 - **Compile-verified**: the adapter's source compiled against that exact API version.
 - **Tested on MockBukkit**: Bloom's integration suite ran against MockBukkit's implementation of that API.
-- **Tested on a real server**: the self-test plugin ran on that server build and passed. No version has this
-  status yet; the harness exists (`scripts/realserver/run.sh`) and needs to be run by the project owner.
+- **Tested on a real server**: the self-test plugin ran on that server build and passed (`scripts/realserver`).
+  PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3 have this status.
 
 ## Capabilities
 
@@ -311,6 +311,33 @@ different Bloom versions without conflict, and server owners install nothing ext
 At startup Bloom checks how it was loaded. If its classes came from another plugin's class loader, it logs a warning:
 that happens when a plugin shades Bloom without relocating it, and another plugin then picks up those classes.
 With `BloomOptions.debug(true)` Bloom also tells you when your own copy is not relocated.
+
+## Check your jar with bloom-doctor
+
+`bloom-doctor` inspects the jar you are about to ship, before a server does:
+
+- `plugin.yml` exists and its `main` class is in the jar;
+- Bloom, SnakeYAML, HikariCP and SLF4J are relocated, and the Bukkit API is not bundled;
+- at least one platform adapter is included (and which server families that covers);
+- the bytecode level fits the oldest server you target (Java 8 for 1.7.10 – 1.8.9);
+- with API jars given, every Bukkit/Paper method, field and class your jar uses exists **with the same shape** on
+  each target server. This is what catches `NoSuchMethodError`, `NoSuchFieldError` and
+  `IncompatibleClassChangeError` (for example `InventoryView`, a class on 1.8 and an interface on 1.21) without
+  booting a server.
+
+Build it from the Bloom repository (`./gradlew :bloom-doctor:shadowJar`), then:
+
+```bash
+java -jar bloom-doctor-0.1.0-SNAPSHOT-all.jar build/libs/my-plugin.jar \
+  --legacy-api spigot-1.8.8=spigot-api-1.8.8-R0.1-SNAPSHOT.jar,bungeecord-chat-1.8-SNAPSHOT.jar \
+  --modern-api paper-1.21.11=paper-api-1.21.11-R0.1-SNAPSHOT.jar,adventure-api-4.26.1.jar,...
+```
+
+List the API jar together with its dependencies for each target (Gradle: the `compileClasspath` of a project that
+depends on that API). The legacy adapter is not checked against modern APIs and vice versa, because Bloom never
+loads it there. If your own code has version-specific classes that you only load after a version check, exclude
+their package with `--exclude com.example.myplugin.v1_21`. The exit code is 1 when there is an error, so the doctor
+can run in CI. Bloom itself runs it on every example plugin in its build.
 
 ## Standalone runtime (planned)
 
@@ -512,6 +539,13 @@ use. It is verified by building the standalone template in `bloom-examples/templ
 The same as cross-version, without `bloom-modern` and without `disableAutoTargetJvm()`:
 
 ```kotlin title="build.gradle.kts"
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    maven("https://repo.papermc.io/repository/maven-public/") // bungeecord-chat for spigot-api 1.8.8
+}
+
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
@@ -641,9 +675,9 @@ feature (boss bars on 1.8, for example), Bloom reports it as a missing **capabil
 documents what happens instead.
 
 <Callout type="compat">
-Bloom is pre-release software. The modern adapter is tested on MockBukkit (Paper 1.21.11 API) and compiles against
-Paper 1.21.1 and 26.3. The legacy adapter is unit-tested and compiles against Spigot 1.8.8; its real-server test runs
-are still pending. See [Compatibility](/docs/compatibility) for exactly what has been verified.
+Bloom is pre-release software. Its self-test plugin passes on real PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11
+and 26.3 servers; the modern adapter is also tested on MockBukkit and compiles against Paper 1.21.1, 1.21.11 and 26.3.
+See [Compatibility](/docs/compatibility) for exactly what has been verified.
 </Callout>
 
 ## Where to go next
@@ -1105,8 +1139,9 @@ but deletes and re-inserts the row, so `ON DELETE CASCADE` children are removed;
 - Error messages include the SQL statement but never parameter values, which may contain personal data.
 
 <Callout type="compat">
-SQLite is tested by Bloom's build on Java 8 and Java 21. Tests against real MySQL 8.4 and MariaDB 11 exist
-(`scripts/test-network-databases.sh`) and need Docker; they have not been run yet.
+SQLite is tested by Bloom's build on Java 8 and Java 21, and with sqlite-jdbc 3.7.2, the driver 1.7.10 and 1.8.x
+servers bundle. Every change is also tested against real MySQL 8.4 and MariaDB 11 in CI
+(`scripts/test-network-databases.sh` runs the same tests locally with Docker).
 </Callout>
 
 ---
@@ -1150,9 +1185,13 @@ build on skips as Bloom's own integration tests do; otherwise untested code look
 - Unit tests for every module; the server-independent modules also run on a real Java 8 runtime.
 - MockBukkit integration tests that load the real modern adapter, plus every example plugin's shaded and relocated jar.
 - Compile checks of the modern adapter against Paper 1.21.1, 1.21.11 and 26.3.
-- A real-server harness, `scripts/realserver/run.sh`, which downloads an official Paper or PaperSpigot build, checks
-  its SHA-256, starts it with a self-test plugin and reports the result. Running a server means accepting the
-  Minecraft EULA, so the script only runs when you set `BLOOM_ACCEPT_MINECRAFT_EULA=true` yourself.
+- SQLite tests on the old sqlite-jdbc 3.7.2 driver, and MySQL 8.4 / MariaDB 11 tests in CI.
+- `bloom-doctor` linkage checks of every example plugin against spigot-api 1.8.8 and paper-api 1.21.11 and 26.3.
+- A real-server harness, `scripts/realserver/run.sh` (`run.bat` on Windows), which downloads an official Paper or
+  PaperSpigot build, checks its SHA-256, starts it with a self-test plugin and reports the result. Running a server
+  means accepting the Minecraft EULA: `run.bat` asks you to type YES, and `run.sh` only runs when you set
+  `BLOOM_ACCEPT_MINECRAFT_EULA=true` yourself.
+  It has passed on PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3.
 
 ---
 

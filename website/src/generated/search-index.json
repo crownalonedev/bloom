@@ -88,7 +88,7 @@
     "page": "Compatibility",
     "heading": "Versions",
     "anchor": "versions",
-    "text": "Bloom uses these levels and never mixes them up: - Supported : Bloom starts and selects an adapter. - Compile-verified : the adapter's source compiled against that exact API version. - Tested on MockBukkit : Bloom's integration suite ran against MockBukkit's implementation of that API. - Tested on a real server : the self-test plugin ran on that server build and passed. No version has this status yet; the harness exists scripts/realserver/run.sh and needs to be run by the project owner."
+    "text": "Bloom uses these levels and never mixes them up: - Supported : Bloom starts and selects an adapter. - Compile-verified : the adapter's source compiled against that exact API version. - Tested on MockBukkit : Bloom's integration suite ran against MockBukkit's implementation of that API. - Tested on a real server : the self-test plugin ran on that server build and passed scripts/realserver . PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3 have this status."
   },
   {
     "slug": "compatibility",
@@ -215,6 +215,13 @@
     "heading": "Embedded (supported)",
     "anchor": "embedded-supported",
     "text": "Each plugin shades its own copy of Bloom and relocates it into its own package. Two plugins on one server can use different Bloom versions without conflict, and server owners install nothing extra. At startup Bloom checks how it was loaded. If its classes came from another plugin's class loader, it logs a warning: that happens when a plugin shades Bloom without relocating it, and another plugin then picks up those classes. With BloomOptions.debug true Bloom also tells you when your own copy is not relocated."
+  },
+  {
+    "slug": "distribution",
+    "page": "Distribution",
+    "heading": "Check your jar with bloom-doctor",
+    "anchor": "check-your-jar-with-bloom-doctor",
+    "text": "bloom-doctor inspects the jar you are about to ship, before a server does: - plugin.yml exists and its main class is in the jar; - Bloom, SnakeYAML, HikariCP and SLF4J are relocated, and the Bukkit API is not bundled; - at least one platform adapter is included and which server families that covers ; - the bytecode level fits the oldest server you target Java 8 for 1.7.10 – 1.8.9 ; - with API jars given, every Bukkit/Paper method, field and class your jar uses exists with the same shape on each target server. This is what catches NoSuchMethodError , NoSuchFieldError and IncompatibleClassChange"
   },
   {
     "slug": "distribution",
@@ -417,7 +424,7 @@
     "page": "Introduction",
     "heading": "How Bloom thinks about versions",
     "anchor": "how-bloom-thinks-about-versions",
-    "text": "Bloom never pretends. If a server has no adapter, Bloom refuses to start and explains why. If a server lacks a feature boss bars on 1.8, for example , Bloom reports it as a missing capability you can check, and each API documents what happens instead. Bloom is pre-release software. The modern adapter is tested on MockBukkit Paper 1.21.11 API and compiles against Paper 1.21.1 and 26.3. The legacy adapter is unit-tested and compiles against Spigot 1.8.8; its real-server test runs are still pending. See Compatibility /docs/compatibility for exactly what has been verified."
+    "text": "Bloom never pretends. If a server has no adapter, Bloom refuses to start and explains why. If a server lacks a feature boss bars on 1.8, for example , Bloom reports it as a missing capability you can check, and each API documents what happens instead. Bloom is pre-release software. Its self-test plugin passes on real PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3 servers; the modern adapter is also tested on MockBukkit and compiles against Paper 1.21.1, 1.21.11 and 26.3. See Compatibility /docs/compatibility for exactly what has been verified."
   },
   {
     "slug": "introduction",
@@ -711,7 +718,7 @@
     "page": "Storage",
     "heading": "Limits and shutdown",
     "anchor": "limits-and-shutdown",
-    "text": "- Operations wait in a bounded queue 1,000 by default, queueCapacity . When it is full, new operations fail at once with \"The database queue is full\" instead of piling up memory while the database is down. - close stops accepting work, waits for queued operations 10 seconds by default, shutdownTimeout , fails anything that could not run, and closes the pool. Register the database as a Bloom service and Bloom does this on shutdown. - Error messages include the SQL statement but never parameter values, which may contain personal data. SQLite is tested by Bloom's build on Java 8 and Java 21. Test"
+    "text": "- Operations wait in a bounded queue 1,000 by default, queueCapacity . When it is full, new operations fail at once with \"The database queue is full\" instead of piling up memory while the database is down. - close stops accepting work, waits for queued operations 10 seconds by default, shutdownTimeout , fails anything that could not run, and closes the pool. Register the database as a Bloom service and Bloom does this on shutdown. - Error messages include the SQL statement but never parameter values, which may contain personal data. SQLite is tested by Bloom's build on Java 8 and Java 21, and "
   },
   {
     "slug": "testing",
@@ -739,7 +746,7 @@
     "page": "Testing",
     "heading": "How Bloom is tested",
     "anchor": "how-bloom-is-tested",
-    "text": "- Unit tests for every module; the server-independent modules also run on a real Java 8 runtime. - MockBukkit integration tests that load the real modern adapter, plus every example plugin's shaded and relocated jar. - Compile checks of the modern adapter against Paper 1.21.1, 1.21.11 and 26.3. - A real-server harness, scripts/realserver/run.sh , which downloads an official Paper or PaperSpigot build, checks its SHA-256, starts it with a self-test plugin and reports the result. Running a server means accepting the Minecraft EULA, so the script only runs when you set BLOOM ACCEPT MINECRAFT EULA"
+    "text": "- Unit tests for every module; the server-independent modules also run on a real Java 8 runtime. - MockBukkit integration tests that load the real modern adapter, plus every example plugin's shaded and relocated jar. - Compile checks of the modern adapter against Paper 1.21.1, 1.21.11 and 26.3. - SQLite tests on the old sqlite-jdbc 3.7.2 driver, and MySQL 8.4 / MariaDB 11 tests in CI. - bloom-doctor linkage checks of every example plugin against spigot-api 1.8.8 and paper-api 1.21.11 and 26.3. - A real-server harness, scripts/realserver/run.sh run.bat on Windows , which downloads an official P"
   },
   {
     "slug": "troubleshooting",

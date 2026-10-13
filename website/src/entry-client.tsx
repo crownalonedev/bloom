@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { Router } from "wouter";
 import { App } from "./App";
+import { loadApi } from "./pages/ApiReferencePage";
 import { docLoader, registerDoc } from "./pages/DocPage";
 
 const container = document.getElementById("root")!;
@@ -22,6 +23,7 @@ async function start() {
     const module = await loader().catch(() => undefined);
     if (module) registerDoc(match[1]!, module.default);
   }
+  if (/^\/api\/?$/.test(window.location.pathname)) await loadApi().catch(() => undefined);
   if (container.hasChildNodes()) hydrateRoot(container, app);
   else createRoot(container).render(app);
 }

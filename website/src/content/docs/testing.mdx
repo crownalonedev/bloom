@@ -36,6 +36,10 @@ build on skips as Bloom's own integration tests do; otherwise untested code look
 - Unit tests for every module; the server-independent modules also run on a real Java 8 runtime.
 - MockBukkit integration tests that load the real modern adapter, plus every example plugin's shaded and relocated jar.
 - Compile checks of the modern adapter against Paper 1.21.1, 1.21.11 and 26.3.
-- A real-server harness, `scripts/realserver/run.sh`, which downloads an official Paper or PaperSpigot build, checks
-  its SHA-256, starts it with a self-test plugin and reports the result. Running a server means accepting the
-  Minecraft EULA, so the script only runs when you set `BLOOM_ACCEPT_MINECRAFT_EULA=true` yourself.
+- SQLite tests on the old sqlite-jdbc 3.7.2 driver, and MySQL 8.4 / MariaDB 11 tests in CI.
+- `bloom-doctor` linkage checks of every example plugin against spigot-api 1.8.8 and paper-api 1.21.11 and 26.3.
+- A real-server harness, `scripts/realserver/run.sh` (`run.bat` on Windows), which downloads an official Paper or
+  PaperSpigot build, checks its SHA-256, starts it with a self-test plugin and reports the result. Running a server
+  means accepting the Minecraft EULA: `run.bat` asks you to type YES, and `run.sh` only runs when you set
+  `BLOOM_ACCEPT_MINECRAFT_EULA=true` yourself.
+  It has passed on PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3.

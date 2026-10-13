@@ -71,7 +71,8 @@ public final class TextTemplates {
     private static String render(Placeholder placeholder, TextFormat format, boolean hex) {
         String value = placeholder.value();
         if (format == TextFormat.MINIMESSAGE) {
-            return placeholder.isFormatted() ? value : MiniMessageLite.escape(value);
+            // Section signs too: clients apply § codes inside components, so untrusted text could still format.
+            return placeholder.isFormatted() ? value : MiniMessageLite.escape(LegacyText.neutralize(value));
         }
         return placeholder.isFormatted() ? LegacyText.colorize(value, hex) : LegacyText.neutralize(value);
     }

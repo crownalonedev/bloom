@@ -10,7 +10,7 @@
   "scripts": {
     "content": "node scripts/build-content.mjs",
     "dev": "npm run content && vite",
-    "build": "npm run content && vite build --outDir dist/client && vite build --ssr src/entry-server.tsx --outDir dist/server && node scripts/prerender.mjs",
+    "build": "npm run content && vite build --outDir dist/client && vite build --ssr src/entry-server.tsx --outDir dist/server && node scripts/prerender.mjs && node scripts/check-site.mjs",
     "preview": "wrangler dev",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
@@ -41,6 +41,7 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "github-slugger": "2.0.0",
     "globals": "17.13.0",
+    "parse5": "8.0.1",
     "rehype-slug": "6.0.0",
     "remark-frontmatter": "5.0.0",
     "remark-gfm": "4.0.1",

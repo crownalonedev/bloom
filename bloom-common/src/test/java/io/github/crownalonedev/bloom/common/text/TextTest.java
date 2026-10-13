@@ -76,6 +76,18 @@ class TextTest {
     }
 
     @Test
+    void untrustedValuesStayPlainWhenMiniMessageIsRenderedForLegacyServers() {
+        // A player-chosen name with a click action, a legacy colour code and a section sign.
+        String prepared = TextTemplates.prepare(
+                "<gray>Hi {name}",
+                TextFormat.MINIMESSAGE,
+                false,
+                Placeholder.of("name", "<click:run_command:'/op Eve'>&c§lEve</click>"));
+        String legacy = MiniMessageLite.toLegacy(prepared);
+        assertEquals("§7Hi <click:run_command:'/op Eve'>&cEve</click>", legacy);
+    }
+
+    @Test
     void placeholdersAreSinglePassAndUnknownKeysRemain() {
         assertEquals(
                 "{b} and {missing}",

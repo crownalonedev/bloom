@@ -134,7 +134,7 @@ final class LegacyItems implements ItemPlatform {
         }
         try {
             byte[] bytes = Base64.getDecoder().decode(data.substring(SERIAL_PREFIX.length()));
-            BukkitObjectInputStream in = new BukkitObjectInputStream(new ByteArrayInputStream(bytes));
+            BukkitObjectInputStream in = new SafeItemInputStream(new ByteArrayInputStream(bytes));
             try {
                 return (ItemStack) in.readObject();
             } finally {

@@ -1,0 +1,29 @@
+# Weekly dependency update pull requests. Server API versions (spigot-api, paper-api) are pinned on purpose and
+# changed deliberately together with the compatibility matrix, so they are ignored here.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "org.spigotmc:spigot-api"
+      - dependency-name: "io.papermc.paper:paper-api"
+      - dependency-name: "com.zaxxer:HikariCP" # 4.0.3 is the last Java 8 line
+      # The catalog pins sqlite-jdbc twice: current, and 3.7.2 for testLegacySqlite (the driver 1.7.10/1.8 servers
+      # bundle). Dependabot cannot tell them apart and would "upgrade" the legacy pin, so update it by hand.
+      - dependency-name: "org.xerial:sqlite-jdbc"
+    groups:
+      gradle-minor:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+    groups:
+      website-minor:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
