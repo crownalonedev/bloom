@@ -123,7 +123,8 @@ write("search-index.json", search);
 
 // ---- project facts -------------------------------------------------------------------------------------------------
 const gradleProps = readFileSync(join(repo, "gradle.properties"), "utf8");
-const version = gradleProps.match(/^version=(.+)$/m)?.[1]?.trim() ?? "unknown";
+// BLOOM_DOCS_VERSION lets the deployed site describe the latest release while main is already the next snapshot.
+const version = process.env.BLOOM_DOCS_VERSION || (gradleProps.match(/^version=(.+)$/m)?.[1]?.trim() ?? "unknown");
 const group = gradleProps.match(/^group=(.+)$/m)?.[1]?.trim() ?? "unknown";
 write("project.json", { version, group, repository: `https://github.com/${REPOSITORY}` });
 write("compatibility.json", JSON.parse(readFileSync(join(repo, "docs", "compatibility.json"), "utf8")));
@@ -184,6 +185,7 @@ write("releases.json", releases);
 const manifest = join(repo, "build", "api", "api-manifest.json");
 if (existsSync(manifest)) {
   const api = JSON.parse(readFileSync(manifest, "utf8"));
+  if (process.env.BLOOM_DOCS_VERSION) api.bloomVersion = process.env.BLOOM_DOCS_VERSION;
   write("api.json", { available: true, ...api });
   mkdirSync(publicDir, { recursive: true });
   writeFileSync(join(publicDir, "api-manifest.json"), JSON.stringify(api) + "\n");

@@ -79,6 +79,7 @@ Other checks:
 
 ## Documentation
 
+- Website: <https://bloom-website.taxablesminecraft.workers.dev>
 - Guides: [website/src/content/docs](website/src/content/docs) (published as the Bloom website)
 - Check a built plugin jar: `bloom-doctor` ([distribution guide](website/src/content/docs/distribution.mdx))
 - Architecture and decisions: [docs/architecture](docs/architecture)

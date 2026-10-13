@@ -242,8 +242,8 @@ export function HomePage() {
           <div className="min-w-0 [&_figure]:my-0">
             <InstallGradle />
             <p className="mt-3 text-[0.86rem] text-muted">
-              Bloom {project.version} is not on a public Maven repository yet; the installation guide shows how to
-              publish it to Maven Local.
+              Bloom {project.version} is not on Maven Central yet; the installation guide shows how to use the release
+              from GitHub.
             </p>
           </div>
         </div>

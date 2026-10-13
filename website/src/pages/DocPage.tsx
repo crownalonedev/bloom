@@ -199,8 +199,8 @@ export function DocPage({ slug }: { slug: string }) {
         )}
         {preRelease && (
           <p className="mb-8 rounded-md border border-line bg-surface px-4 py-2.5 text-[0.88rem] text-muted">
-            These docs describe Bloom {project.version}, a pre-release. APIs may change before 1.0, and nothing is
-            published to a public Maven repository yet.
+            These docs describe Bloom {project.version}, a pre-release. APIs may change before 1.0, and Bloom is not
+            on Maven Central yet (see Installation).
           </p>
         )}
         <main id="main" className="prose-bloom">

@@ -1,6 +1,6 @@
 {
   "available": true,
-  "bloomVersion": "0.2.0-SNAPSHOT",
+  "bloomVersion": "0.1.0",
   "modules": [
     {
       "name": "bloom-api",

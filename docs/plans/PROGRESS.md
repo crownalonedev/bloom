@@ -4,8 +4,8 @@ _Last updated: 2026-10-13 (session 2, end)._ Update this file at the end of ever
 
 ## Current phase
 All ten phases of the master plan are implemented. **0.1.0 released on GitHub** (2026-10-13,
-https://github.com/crownalonedev/bloom/releases/tag/v0.1.0); `main` is 0.2.0-SNAPSHOT. Not yet on Maven Central;
-website not yet deployed.
+https://github.com/crownalonedev/bloom/releases/tag/v0.1.0); `main` is 0.2.0-SNAPSHOT. Not yet on Maven Central.
+Website deployed 2026-10-13: https://bloom-website.taxablesminecraft.workers.dev (built with BLOOM_DOCS_VERSION=0.1.0).
 
 ## Completed (implemented + tested)
 - **Phase 1 foundation**: Gradle 9.8.1 wrapper, build-logic convention plugins, version catalog, toolchains

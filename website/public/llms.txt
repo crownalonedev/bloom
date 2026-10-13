@@ -1,6 +1,6 @@
 # Bloom Framework
 
-> Cross-version Minecraft plugin framework (Bukkit/Spigot 1.7.10-1.8.9 and Paper 1.21.1-26.3.x). Version 0.2.0-SNAPSHOT, Maven group io.github.crownalonedev.bloom.
+> Cross-version Minecraft plugin framework (Bukkit/Spigot 1.7.10-1.8.9 and Paper 1.21.1-26.3.x). Version 0.1.0, Maven group io.github.crownalonedev.bloom.
 
 Read /llms-full.txt for all documentation in one file and /api-manifest.json for every public type and method.
 Only use methods listed in the API manifest; do not invent APIs. Check capabilities before version-specific features.

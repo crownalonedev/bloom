@@ -10,8 +10,11 @@ account; nothing in the repository deploys automatically.
 ./gradlew apiManifest                 # API reference data (build/api/api-manifest.json)
 cd website
 npm ci
-BLOOM_SITE_URL=https://bloom.example.com npm run build
+BLOOM_SITE_URL=https://bloom.example.com BLOOM_DOCS_VERSION=0.1.0 npm run build
 ```
+
+`BLOOM_DOCS_VERSION` is the version the site describes. Set it to the latest release; without it the site shows the
+version in `gradle.properties` (the next `-SNAPSHOT` on `main`).
 
 `BLOOM_SITE_URL` is the public origin. With it, the build adds canonical URLs and `sitemap.xml`; without it, they are
 skipped with a warning. The build fails on broken internal links, missing accessibility basics or inline scripts the
@@ -30,7 +33,8 @@ npx wrangler login     # opens the browser; authorises wrangler for your Cloudfl
 npm run deploy         # = npm run build && wrangler deploy
 ```
 
-Wrangler creates the `bloom-website` Worker and prints its `*.workers.dev` URL. Rebuild with `BLOOM_SITE_URL` set to
+Wrangler creates the `bloom-website` Worker and prints its `*.workers.dev` URL (currently
+<https://bloom-website.taxablesminecraft.workers.dev>). Rebuild with `BLOOM_SITE_URL` set to
 that URL (or your domain) and deploy again so canonical URLs are right.
 
 ## Custom domain
