@@ -40,7 +40,7 @@ jobs:
             echo "::error::CHANGELOG.md has no '## [$VERSION]' section (move the Unreleased entries there first)"; exit 1
           fi
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: |
