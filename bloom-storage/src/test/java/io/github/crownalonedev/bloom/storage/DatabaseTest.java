@@ -102,6 +102,16 @@ class DatabaseTest {
     }
 
     @Test
+    void sqliteDefaultsApplyWalAndForeignKeys() {
+        assertEquals(
+                Arrays.asList("wal"),
+                db.query("PRAGMA journal_mode", rs -> rs.getString(1)).join());
+        assertEquals(
+                Arrays.asList(1),
+                db.query("PRAGMA foreign_keys", rs -> rs.getInt(1)).join());
+    }
+
+    @Test
     void crudWithTypedParameters() {
         UUID id = UUID.randomUUID();
         assertEquals(

@@ -787,6 +787,9 @@ public final class Database implements Terminable {
             HikariDataSource dataSource;
             try {
                 dataSource = new HikariDataSource(config);
+                if (dialect == Dialect.SQLITE && !properties.containsKey("journal_mode")) {
+                    enableWal(dataSource);
+                }
             } catch (RuntimeException e) {
                 Throwable root = e;
                 while (root.getCause() != null) {
@@ -807,7 +810,8 @@ public final class Database implements Terminable {
             if (dialect == Dialect.SQLITE) {
                 defaults.put("foreign_keys", "true");
                 defaults.put("busy_timeout", "5000");
-                defaults.put("journal_mode", "WAL");
+                // journal_mode is not a connection property: sqlite-jdbc 3.7.2 (bundled with 1.8 servers) applies
+                // properties as a batch and rejects pragmas that return rows. See enableWal().
             } else if (dialect == Dialect.MYSQL) {
                 defaults.put("cachePrepStmts", "true");
                 defaults.put("prepStmtCacheSize", "250");
@@ -816,6 +820,17 @@ public final class Database implements Terminable {
                 defaults.put("characterEncoding", "utf8");
             }
             return defaults;
+        }
+
+        /** WAL is stored in the database file, so setting it once covers every pooled connection. */
+        private static void enableWal(HikariDataSource dataSource) {
+            try (Connection connection = dataSource.getConnection();
+                    java.sql.Statement statement = connection.createStatement()) {
+                statement.execute("PRAGMA journal_mode=WAL");
+            } catch (SQLException e) {
+                dataSource.close();
+                throw new IllegalStateException("Could not enable WAL journal mode: " + e.getMessage(), e);
+            }
         }
 
         private String resolveDriver() {

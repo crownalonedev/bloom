@@ -107,7 +107,9 @@ echo "Starting $JAR_NAME on port $PORT (timeout ${TIMEOUT}s)"
 cd "$WORK"
 set +e
 if command -v timeout >/dev/null 2>&1; then
-  timeout "$TIMEOUT" "$JAVA" -Xms512M -Xmx1536M -Dcom.mojang.eula.agree=true -jar server.jar nogui < /dev/null > server.log 2>&1
+  # No -Dcom.mojang.eula.agree: on PaperSpigot 1.7.10 that flag makes startup return early and crash with an NPE.
+  # eula.txt (written above) covers every version.
+  timeout "$TIMEOUT" "$JAVA" -Xms512M -Xmx1536M -jar server.jar nogui < /dev/null > server.log 2>&1
 else
   "$JAVA" -Xms512M -Xmx1536M -jar server.jar nogui < /dev/null > server.log 2>&1
 fi
