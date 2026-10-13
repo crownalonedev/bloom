@@ -19,7 +19,7 @@ Instructions for coding agents (and people) changing Bloom itself. To *use* Bloo
 | `bloom-apidoc` | Build-time doclet for `./gradlew apiManifest`. |
 | `bloom-doctor` | CLI that checks built plugin jars (relocation, Java level, Bukkit API linkage). |
 | `website/` | Documentation site (React, Vite, MDX). Content in `website/src/content/docs`. |
-| `docs/` | Architecture, ADRs (`DECISIONS.md`), compatibility matrix, master plan, `PROGRESS.md`. |
+| `docs/` | Architecture, ADRs (`DECISIONS.md`), compatibility matrix, master plan, `PROGRESS.md`, guides (versioning, releasing, publishing, deployment), reviews. |
 
 ## Commands
 

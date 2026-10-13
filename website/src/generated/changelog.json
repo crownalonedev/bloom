@@ -13,7 +13,16 @@
           "`bloom-config`: YAML configuration with defaults, typed getters with line-numbered errors, validation, object mapping, migrations with backups.",
           "`bloom-storage`: asynchronous SQLite, MySQL and MariaDB access with pooling, transactions, migrations and repositories.",
           "`bloom-testing`: manual scheduler and test clock.",
-          "Example plugins, a standalone template project, a real-server self-test harness and the documentation website."
+          "Example plugins, a standalone template project, a real-server self-test harness (`run.sh`, `run.bat`) and the documentation website.",
+          "`bloom-doctor`: checks plugin jars (plugin.yml, relocation, adapters, Java level) and verifies every Bukkit/Paper reference against target server APIs.",
+          "API manifest (`./gradlew apiManifest`), API reference page, `llms.txt`, `AGENTS.md` and a Claude Code skill for plugin authors."
+        ]
+      },
+      {
+        "title": "Security",
+        "items": [
+          "Legacy `Items.deserialize` only resolves the classes an item consists of instead of any serializable class.",
+          "Untrusted `Placeholder.of` values can no longer inject section-sign formatting into MiniMessage messages."
         ]
       },
       {

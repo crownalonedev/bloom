@@ -79,12 +79,14 @@ Other checks:
 - `scripts/realserver/run.sh <version>` (or `run.bat` on Windows) boots an official server with the self-test plugin.
   Running a Minecraft server means accepting the [Minecraft EULA](https://aka.ms/MinecraftEULA); the script asks first.
 - `scripts/test-network-databases.sh` runs the storage tests against MySQL and MariaDB in Docker (CI does this too).
-- `website/`: `npm ci && npm run build` builds the documentation site.
+- `website/`: `npm ci && npm run build` builds the documentation site and checks its links and accessibility.
 
 ## Documentation
 
 - Guides: [website/src/content/docs](website/src/content/docs) (published as the Bloom website)
+- Check a built plugin jar: `bloom-doctor` ([distribution guide](website/src/content/docs/distribution.mdx))
 - Architecture and decisions: [docs/architecture](docs/architecture)
+- Versioning, releasing, publishing and deployment: [docs/guides](docs/guides)
 - Roadmap and status: [docs/plans](docs/plans)
 - Using an AI coding assistant: see [AGENTS.md](AGENTS.md)
 

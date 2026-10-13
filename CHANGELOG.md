@@ -13,7 +13,13 @@ and Bloom uses [semantic versioning](https://semver.org/) from 1.0. Before 1.0, 
 - `bloom-config`: YAML configuration with defaults, typed getters with line-numbered errors, validation, object mapping, migrations with backups.
 - `bloom-storage`: asynchronous SQLite, MySQL and MariaDB access with pooling, transactions, migrations and repositories.
 - `bloom-testing`: manual scheduler and test clock.
-- Example plugins, a standalone template project, a real-server self-test harness and the documentation website.
+- Example plugins, a standalone template project, a real-server self-test harness (`run.sh`, `run.bat`) and the documentation website.
+- `bloom-doctor`: checks plugin jars (plugin.yml, relocation, adapters, Java level) and verifies every Bukkit/Paper reference against target server APIs.
+- API manifest (`./gradlew apiManifest`), API reference page, `llms.txt`, `AGENTS.md` and a Claude Code skill for plugin authors.
+
+### Security
+- Legacy `Items.deserialize` only resolves the classes an item consists of instead of any serializable class.
+- Untrusted `Placeholder.of` values can no longer inject section-sign formatting into MiniMessage messages.
 
 ### Fixed
 - SQLite on 1.7.10 and 1.8.x servers, whose bundled sqlite-jdbc 3.7.2 rejected the WAL setting and lacks `Connection.isValid`.

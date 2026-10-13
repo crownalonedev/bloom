@@ -7,6 +7,7 @@
 plugins {
     `java-library`
     `maven-publish`
+    signing
 }
 
 publishing {
@@ -41,5 +42,16 @@ publishing {
             name = "staging"
             url = uri(rootProject.layout.buildDirectory.dir("staging-repo"))
         }
+    }
+}
+
+// Maven Central requires PGP signatures. Signing is opt-in: it only happens when BLOOM_SIGNING_KEY (an ASCII-armored
+// private key) is set, e.g. as a secret in the release workflow. Without it, nothing is signed and builds are
+// unchanged. See docs/guides/PUBLISHING.md.
+val signingKey = providers.environmentVariable("BLOOM_SIGNING_KEY")
+if (signingKey.isPresent) {
+    signing {
+        useInMemoryPgpKeys(signingKey.get(), providers.environmentVariable("BLOOM_SIGNING_PASSWORD").orNull)
+        sign(publishing.publications["maven"])
     }
 }

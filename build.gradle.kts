@@ -35,3 +35,28 @@ tasks.register("apiManifest") {
         }
     }
 }
+
+// ---- Release packaging ----------------------------------------------------------------------------------------------
+// Zips build/staging-repo (written by publishAllPublicationsToStagingRepository) into the bundle layout the Maven
+// Central Portal accepts for manual upload. Nothing is uploaded; see docs/guides/PUBLISHING.md.
+val cleanStagingRepo = tasks.register<Delete>("cleanStagingRepo") {
+    description = "Empties build/staging-repo so a release bundle never contains earlier builds."
+    delete(layout.buildDirectory.dir("staging-repo"))
+}
+subprojects {
+    tasks.matching { it.name.startsWith("publish") && it.name.endsWith("ToStagingRepository") }.configureEach {
+        dependsOn(cleanStagingRepo)
+    }
+}
+tasks.register<Zip>("centralBundle") {
+    description = "Packages the local staging repository as a Maven Central Portal upload bundle."
+    group = "publishing"
+    dependsOn(subprojects.map { "${it.path}:publishAllPublicationsToStagingRepository" }.filter { path ->
+        project(path.substringBeforeLast(":")).plugins.hasPlugin("maven-publish")
+    })
+    from(layout.buildDirectory.dir("staging-repo")) {
+        exclude("**/maven-metadata*")
+    }
+    archiveFileName = "bloom-$bloomVersion-central-bundle.zip"
+    destinationDirectory = layout.buildDirectory.dir("release")
+}

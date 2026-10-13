@@ -1,0 +1,87 @@
+# Manual release preparation. Builds and verifies a release version and creates a DRAFT GitHub release with the
+# artifacts. Nothing is published: the draft stays private until the owner publishes it on GitHub, and Maven Central
+# uploads are a separate manual step (docs/guides/RELEASING.md, docs/guides/PUBLISHING.md).
+name: Release (draft)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 0.1.0 (CHANGELOG.md must have a '## [0.1.0]' section)"
+        required: true
+
+permissions:
+  contents: write # create the draft release
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate version and changelog
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a release version (X.Y.Z or X.Y.Z-rc.N)"; exit 1
+          fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$VERSION already exists"; exit 1
+          fi
+          # Release notes = the CHANGELOG section for this version.
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::CHANGELOG.md has no '## [$VERSION]' section (move the Unreleased entries there first)"; exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            25
+            21
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, test and package
+        env:
+          # Optional repository secrets: when present, artifacts are PGP-signed for Maven Central.
+          BLOOM_SIGNING_KEY: ${{ secrets.BLOOM_SIGNING_KEY }}
+          BLOOM_SIGNING_PASSWORD: ${{ secrets.BLOOM_SIGNING_PASSWORD }}
+        run: >
+          ./gradlew -Pversion="$VERSION" --console=plain
+          build apiManifest centralBundle :bloom-doctor:shadowJar
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist
+          cp build/release/bloom-$VERSION-central-bundle.zip dist/
+          cp bloom-doctor/build/libs/bloom-doctor-$VERSION-all.jar dist/
+          cp build/api/api-manifest.json dist/bloom-$VERSION-api-manifest.json
+          for example in basic menus items config storage cross-version; do
+            cp bloom-examples/example-$example/build/libs/example-$example-$VERSION.jar dist/
+          done
+          (cd dist && sha256sum * > SHA256SUMS)
+          cat dist/SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bloom-${{ inputs.version }}
+          path: dist/
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "v$VERSION" dist/*
+          --draft
+          --target "$GITHUB_SHA"
+          --title "Bloom $VERSION"
+          --notes-file release-notes.md
+          $([[ "$VERSION" == *-* ]] && echo --prerelease)
