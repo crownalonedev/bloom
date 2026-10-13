@@ -31,4 +31,16 @@ tasks.register<Test>("networkDatabaseTest") {
     include("**/NetworkDatabaseIT*")
     environment("BLOOM_TEST_MYSQL_PORT", providers.environmentVariable("BLOOM_TEST_MYSQL_PORT").getOrElse(""))
     environment("BLOOM_TEST_MARIADB_PORT", providers.environmentVariable("BLOOM_TEST_MARIADB_PORT").getOrElse(""))
+    testLogging { events("passed", "skipped", "failed") }
+    // A skipped test here means a database port was missing, which must not pass silently.
+    addTestListener(object : TestListener {
+        override fun beforeSuite(suite: TestDescriptor) {}
+        override fun beforeTest(testDescriptor: TestDescriptor) {}
+        override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+        override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+            if (suite.parent == null && result.skippedTestCount > 0) {
+                throw GradleException("${result.skippedTestCount} network database test(s) were skipped")
+            }
+        }
+    })
 }
