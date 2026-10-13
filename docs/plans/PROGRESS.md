@@ -3,8 +3,9 @@
 _Last updated: 2026-10-13 (session 2, end)._ Update this file at the end of every work session.
 
 ## Current phase
-All ten phases of the master plan are implemented. Pre-release 0.1.0-SNAPSHOT; nothing is published or deployed
-(owner actions listed under "Waiting on the owner").
+All ten phases of the master plan are implemented. **0.1.0 released on GitHub** (2026-10-13,
+https://github.com/crownalonedev/bloom/releases/tag/v0.1.0); `main` is 0.2.0-SNAPSHOT. Not yet on Maven Central;
+website not yet deployed.
 
 ## Completed (implemented + tested)
 - **Phase 1 foundation**: Gradle 9.8.1 wrapper, build-logic convention plugins, version catalog, toolchains
@@ -55,7 +56,7 @@ All ten phases of the master plan are implemented. Pre-release 0.1.0-SNAPSHOT; n
 ## Waiting on the owner
 1. Done 2026-10-13: 1.7.10 and 1.8.8 re-run with the deserialization allow-list; all versions pass.
 2. Done 2026-10-13: GitHub private vulnerability reporting enabled.
-3. First release (0.1.0 in progress): follow docs/guides/RELEASING.md (Maven Central account + signing key secrets, then the
+3. Done 2026-10-13: 0.1.0 published on GitHub Releases (unsigned bundle). Maven Central later: follow docs/guides/RELEASING.md (Maven Central account + signing key secrets, then the
    "Release (draft)" workflow). Website deployment: docs/guides/DEPLOYMENT.md (Cloudflare account).
 
 ## Real-server verification (2026-10-13, Windows, scripts/realserver/run.bat)

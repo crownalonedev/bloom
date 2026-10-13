@@ -1,7 +1,7 @@
 {
   "$comment": "Machine-readable compatibility data used by the website and AI tooling. Keep in sync with docs/architecture/COMPATIBILITY.md and SupportPolicy.java. Status values: tested-real-server, tested-mockbukkit, compile-verified, accepted, unsupported, planned.",
   "updated": "2026-10-13",
-  "bloomVersion": "0.1.0-SNAPSHOT",
+  "bloomVersion": "0.1.0",
   "rows": [
     {
       "minecraft": "1.7.10",

@@ -2,6 +2,11 @@
   {
     "version": "Unreleased",
     "date": null,
+    "groups": []
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-10-13",
     "groups": [
       {
         "title": "Added",

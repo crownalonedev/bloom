@@ -1,5 +1,66 @@
 {
   "available": true,
-  "fetchedAt": "2026-10-13T16:36:01.077Z",
-  "releases": []
+  "fetchedAt": "2026-10-13T17:01:21.829Z",
+  "releases": [
+    {
+      "tag": "v0.1.0",
+      "name": "Bloom 0.1.0",
+      "prerelease": false,
+      "publishedAt": "2026-10-13T16:58:55Z",
+      "url": "https://github.com/crownalonedev/bloom/releases/tag/v0.1.0",
+      "body": "First public release of Bloom: one plugin jar for Minecraft **1.7.10 – 1.8.9** and **Paper 1.21.1 – 26.3.x**.\nVerified on real PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3 servers.\n\n## Using this release\n\nBloom 0.1.0 is not on Maven Central yet. `bloom-0.1.0-central-bundle.zip` is a Maven repository: unzip it and add\nit to your plugin's `build.gradle.kts`:\n\n```kotlin\nrepositories {\n    maven(uri(\"path/to/bloom-0.1.0-repo\"))  // the unzipped bundle\n    // ... spigot / papermc repositories, see the installation guide\n}\ndependencies {\n    implementation(\"io.github.crownalonedev.bloom:bloom-gui:0.1.0\")\n    runtimeOnly(\"io.github.crownalonedev.bloom:bloom-legacy:0.1.0\")\n    runtimeOnly(\"io.github.crownalonedev.bloom:bloom-modern:0.1.0\")\n}\n```\n\nShade and relocate Bloom as shown in `bloom-examples/template`, then check your jar:\n`java -jar bloom-doctor-0.1.0-all.jar build/libs/your-plugin.jar`.\n\nAlso attached: the six example plugins (drop into `plugins/`), the API manifest and `SHA256SUMS`.\n\n\n### Added\n- `bloom-api`, `bloom-common`, `bloom-bukkit`: `Bloom` entry point, platform detection and support policy, capabilities, services, lifecycle, scheduler, messages (chat, action bar, title, boss bar) with an unsupported-feature policy, event subscriptions, cooldowns, durations, caches.\n- Platform adapters: `bloom-legacy` for 1.7.10 – 1.8.9 and `bloom-modern` for Paper 1.21.1 – 26.3.x.\n- `bloom-items`: item builder, modern ↔ legacy material names, item flags, persistent item data, custom items, serialization.\n- `bloom-gui`: inventory menus with buttons, layouts, templates, pagination, back navigation, confirmation and per-player state.\n- `bloom-config`: YAML configuration with defaults, typed getters with line-numbered errors, validation, object mapping, migrations with backups.\n- `bloom-storage`: asynchronous SQLite, MySQL and MariaDB access with pooling, transactions, migrations and repositories.\n- `bloom-testing`: manual scheduler and test clock.\n- Example plugins, a standalone template project, a real-server self-test harness (`run.sh`, `run.bat`) and the documentation website.\n- `bloom-doctor`: checks plugin jars (plugin.yml, relocation, adapters, Java level) and verifies every Bukkit/Paper reference against target server APIs.\n- API manifest (`./gradlew apiManifest`), API reference page, `llms.txt`, `AGENTS.md` and a Claude Code skill for plugin authors.\n\n### Security\n- Legacy `Items.deserialize` only resolves the classes an item consists of instead of any serializable class.\n- Untrusted `Placeholder.of` values can no longer inject section-sign formatting into MiniMessage messages.\n\n### Fixed\n- SQLite on 1.7.10 and 1.8.x servers, whose bundled sqlite-jdbc 3.7.2 rejected the WAL setting and lacks `Connection.isValid`.\n- Persistent item data was lost on 1.7.10 when the item was copied back to a Bukkit stack.\n\n",
+      "assets": [
+        {
+          "name": "bloom-0.1.0-api-manifest.json",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/bloom-0.1.0-api-manifest.json",
+          "size": 231810
+        },
+        {
+          "name": "bloom-0.1.0-central-bundle.zip",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/bloom-0.1.0-central-bundle.zip",
+          "size": 2140737
+        },
+        {
+          "name": "bloom-doctor-0.1.0-all.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/bloom-doctor-0.1.0-all.jar",
+          "size": 169720
+        },
+        {
+          "name": "example-basic-0.1.0.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/example-basic-0.1.0.jar",
+          "size": 153353
+        },
+        {
+          "name": "example-config-0.1.0.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/example-config-0.1.0.jar",
+          "size": 551757
+        },
+        {
+          "name": "example-cross-version-0.1.0.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/example-cross-version-0.1.0.jar",
+          "size": 214281
+        },
+        {
+          "name": "example-items-0.1.0.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/example-items-0.1.0.jar",
+          "size": 211007
+        },
+        {
+          "name": "example-menus-0.1.0.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/example-menus-0.1.0.jar",
+          "size": 212883
+        },
+        {
+          "name": "example-storage-0.1.0.jar",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/example-storage-0.1.0.jar",
+          "size": 399335
+        },
+        {
+          "name": "SHA256SUMS",
+          "url": "https://github.com/crownalonedev/bloom/releases/download/v0.1.0/SHA256SUMS",
+          "size": 837
+        }
+      ]
+    }
+  ]
 }

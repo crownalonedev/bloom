@@ -53,13 +53,9 @@ Verified by booting real PaperSpigot 1.7.10 and 1.8.8 and Paper 1.21.11 and 26.3
 
 ## Installation
 
-Bloom is not on a public Maven repository yet. Build it locally:
-
-```bash
-git clone https://github.com/crownalonedev/bloom.git
-cd bloom
-./gradlew publishToMavenLocal
-```
+Download the latest release from [GitHub Releases](https://github.com/crownalonedev/bloom/releases): unzip
+`bloom-<version>-central-bundle.zip` and add the folder as a Maven repository (`maven(uri("path"))`). Bloom is not
+on Maven Central yet. For the development version, run `./gradlew publishToMavenLocal` in this repository.
 
 Then shade it into your plugin and **relocate** it into your own package, as described in the
 [installation guide](website/src/content/docs/installation.mdx). `bloom-examples/template` is a complete,

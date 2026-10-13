@@ -6,17 +6,19 @@ description: Add Bloom to a Gradle plugin project for legacy, modern or cross-ve
 Bloom is a library you **embed** in your plugin: its classes are shaded into your jar and relocated into your own
 package. Nothing is installed on the server.
 
-<Callout type="warning" title="Not on a public repository yet">
-Bloom has not been released to Maven Central or GitHub Packages. Until it is, build it from source and publish it
-to your local Maven repository:
+<Callout type="warning" title="Not on Maven Central yet">
+Bloom releases are published on [GitHub Releases](https://github.com/crownalonedev/bloom/releases), not yet on
+Maven Central. Download `bloom-0.1.0-central-bundle.zip` from the release, unzip it, and add the folder as a
+repository:
 
-```bash
-git clone https://github.com/crownalonedev/bloom.git
-cd bloom
-./gradlew publishToMavenLocal
+```kotlin title="build.gradle.kts"
+repositories {
+    maven(uri("libs/bloom-0.1.0-repo")) // the unzipped bundle
+}
 ```
 
-Then add `mavenLocal()` to your plugin's repositories.
+To use the latest development version instead, clone the repository, run `./gradlew publishToMavenLocal` and add
+`mavenLocal()`.
 </Callout>
 
 ## Choose your target
@@ -48,8 +50,8 @@ repositories {
 
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
-    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
-    runtimeOnly("io.github.crownalonedev.bloom:bloom-legacy:0.1.0-SNAPSHOT")
+    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0")
+    runtimeOnly("io.github.crownalonedev.bloom:bloom-legacy:0.1.0")
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -70,8 +72,8 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0-SNAPSHOT")
-    runtimeOnly("io.github.crownalonedev.bloom:bloom-modern:0.1.0-SNAPSHOT")
+    implementation("io.github.crownalonedev.bloom:bloom-gui:0.1.0")
+    runtimeOnly("io.github.crownalonedev.bloom:bloom-modern:0.1.0")
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -132,7 +134,7 @@ only on Paper servers, which require Java 21 or newer.
 ```
 
 Build with `./gradlew shadowJar` and copy `build/libs/<name>.jar` into the server's `plugins` folder. The console
-shows a line like `Bloom 0.1.0-SNAPSHOT · Paper 1.21.11 (Java 21.0.5) · adapter: modern`.
+shows a line like `Bloom 0.1.0 · Paper 1.21.11 (Java 21.0.5) · adapter: modern`.
 
 ## Standalone runtime (planned)
 

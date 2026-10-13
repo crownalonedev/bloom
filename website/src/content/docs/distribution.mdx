@@ -25,10 +25,11 @@ With `BloomOptions.debug(true)` Bloom also tells you when your own copy is not r
   `IncompatibleClassChangeError` (for example `InventoryView`, a class on 1.8 and an interface on 1.21) without
   booting a server.
 
-Build it from the Bloom repository (`./gradlew :bloom-doctor:shadowJar`), then:
+Download `bloom-doctor-0.1.0-all.jar` from [GitHub Releases](https://github.com/crownalonedev/bloom/releases) (or
+build it with `./gradlew :bloom-doctor:shadowJar`), then:
 
 ```bash
-java -jar bloom-doctor-0.1.0-SNAPSHOT-all.jar build/libs/my-plugin.jar \
+java -jar bloom-doctor-0.1.0-all.jar build/libs/my-plugin.jar \
   --legacy-api spigot-1.8.8=spigot-api-1.8.8-R0.1-SNAPSHOT.jar,bungeecord-chat-1.8-SNAPSHOT.jar \
   --modern-api paper-1.21.11=paper-api-1.21.11-R0.1-SNAPSHOT.jar,adventure-api-4.26.1.jar,...
 ```

@@ -354,7 +354,7 @@
     "page": "Installation",
     "heading": "Installation",
     "anchor": "",
-    "text": "Bloom is a library you embed in your plugin: its classes are shaded into your jar and relocated into your own package. Nothing is installed on the server. Bloom has not been released to Maven Central or GitHub Packages. Until it is, build it from source and publish it to your local Maven repository: Then add mavenLocal to your plugin's repositories."
+    "text": "Bloom is a library you embed in your plugin: its classes are shaded into your jar and relocated into your own package. Nothing is installed on the server. Bloom releases are published on GitHub Releases https://github.com/crownalonedev/bloom/releases , not yet on Maven Central. Download bloom-0.1.0-central-bundle.zip from the release, unzip it, and add the folder as a repository: To use the latest development version instead, clone the repository, run ./gradlew publishToMavenLocal and add mavenLocal ."
   },
   {
     "slug": "installation",
@@ -396,7 +396,7 @@
     "page": "Installation",
     "heading": "Your first class",
     "anchor": "your-first-class",
-    "text": "Build with ./gradlew shadowJar and copy build/libs/ .jar into the server's plugins folder. The console shows a line like Bloom 0.1.0-SNAPSHOT · Paper 1.21.11 Java 21.0.5 · adapter: modern ."
+    "text": "Build with ./gradlew shadowJar and copy build/libs/ .jar into the server's plugins folder. The console shows a line like Bloom 0.1.0 · Paper 1.21.11 Java 21.0.5 · adapter: modern ."
   },
   {
     "slug": "installation",

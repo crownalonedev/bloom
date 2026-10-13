@@ -9,7 +9,8 @@ version = "1.0.0"
 // @snippet:install.gradle-cross
 repositories {
     mavenCentral()
-    // Bloom is not on a public repository yet: run `./gradlew publishToMavenLocal` in the Bloom repository first.
+    // Bloom is not on Maven Central yet. Either unzip bloom-<version>-central-bundle.zip from GitHub Releases and add
+    // maven(uri("path/to/unzipped-bundle")), or run `./gradlew publishToMavenLocal` in the Bloom repository.
     mavenLocal()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // spigot-api
     // spigot-api 1.8.8 depends on bungeecord-chat 1.8-SNAPSHOT, which only PaperMC's repository still serves.
@@ -22,7 +23,7 @@ java {
     disableAutoTargetJvm()
 }
 
-val bloomVersion = "0.1.0-SNAPSHOT"
+val bloomVersion = providers.gradleProperty("bloomVersion").getOrElse("0.1.0")
 
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT") // compile against the oldest API you support

@@ -4,7 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ./gradlew publishToMavenLocal --console=plain -q
-(cd bloom-examples/template && ./gradlew shadowJar --console=plain -q)
+# Build the template against the Bloom version just published to Maven Local (the template defaults to the release).
+BLOOM_VERSION="$(grep '^version=' gradle.properties | cut -d= -f2)"
+(cd bloom-examples/template && ./gradlew shadowJar --console=plain -q -PbloomVersion="$BLOOM_VERSION")
 JAR="bloom-examples/template/build/libs/my-bloom-plugin-1.0.0.jar"
 # List once: `unzip | grep -q` under pipefail fails at random when grep exits early (SIGPIPE).
 LISTING="$(unzip -l "$JAR")"
