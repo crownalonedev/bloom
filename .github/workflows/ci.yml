@@ -32,11 +32,11 @@ jobs:
       # build = compile (incl. paper-api 1.21.1 / 26.3 verification), Spotless, Javadoc, unit tests on Java 21 and 8,
       # SQLite tests on the 1.8-era driver, MockBukkit integration tests, example plugin jars.
       - run: ./gradlew build apiManifest --console=plain
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-manifest
           path: build/api/api-manifest.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: test-reports
