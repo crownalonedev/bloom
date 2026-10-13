@@ -70,7 +70,7 @@ jobs:
           (cd dist && sha256sum * > SHA256SUMS)
           cat dist/SHA256SUMS
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: bloom-${{ inputs.version }}
           path: dist/
