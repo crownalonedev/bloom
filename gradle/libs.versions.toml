@@ -22,7 +22,7 @@ mockbukkit = "4.116.3"
 mockbukkit-next = "4.117.0"
 sqlite-jdbc = "3.53.4.0"
 sqlite-jdbc-legacy = "3.7.2"   # Driver bundled with 1.7.10 / 1.8.x servers
-mariadb-jdbc = "3.5.10"
+mariadb-jdbc = "4.0.0"
 mysql-jdbc = "26.7.0"
 
 [libraries]
