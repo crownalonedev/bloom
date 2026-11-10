@@ -12,7 +12,7 @@ paper-next = "26.3.build.177-stable"       # Compile-verification: newest suppor
 # --- Runtime libraries (shaded by consumers) ---
 snakeyaml = "2.7"         # Java 8 bytecode; bundled server copies differ by version, so Bloom ships its own
 hikari = "4.0.3"          # Last HikariCP line with Java 8 bytecode (5.x+ requires Java 11)
-asm = "9.11"
+asm = "9.11.1"
 jetbrains-annotations = "26.1.0"  # compile-only: referenced by Paper/Adventure API annotations
 
 # --- Test-only ---
@@ -23,7 +23,7 @@ mockbukkit-next = "4.117.0"
 sqlite-jdbc = "3.53.4.0"
 sqlite-jdbc-legacy = "3.7.2"   # Driver bundled with 1.7.10 / 1.8.x servers
 mariadb-jdbc = "3.5.10"
-mysql-jdbc = "26.7.0"
+mysql-jdbc = "26.10.0"
 
 [libraries]
 spigot-api-legacy = { module = "org.spigotmc:spigot-api", version.ref = "spigot-legacy" }
